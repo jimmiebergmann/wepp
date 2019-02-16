@@ -28,8 +28,8 @@ before_build:
   - git submodule update --init --recursive
   - cd vendor\googletest\googletest
   - cmake .
-  - devenv.exe gtest.sln /Build /SolnConfigName Debug|Win32
-  - devenv.exe gtest.sln /Build /SolnConfigName Release|Win32
+  - devenv.exe gtest.sln /Build /SolnConfigName Debug
+  - devenv.exe gtest.sln /Build /SolnConfigName Release
   - cd ..\..\..\
   
 build:
