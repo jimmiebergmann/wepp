@@ -24,6 +24,13 @@ environment:
 matrix:
   fast_finish: false
 
+before_build:
+  - cd vendor\googletest\googletest
+  - cmake .
+  - devenv.exe gtest.sln /Build /SolnConfigName Debug|Win32
+  - devenv.exe gtest.sln /Build /SolnConfigName Release|Win32
+  - cd ..\..\..\
+  
 build:
   parallel: true
   project: build\visualstudio\wepp.sln
