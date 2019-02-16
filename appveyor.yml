@@ -25,6 +25,7 @@ matrix:
   fast_finish: false
 
 before_build:
+  - git submodule update --init --recursive
   - cd vendor\googletest\googletest
   - cmake .
   - devenv.exe gtest.sln /Build /SolnConfigName Debug|Win32
