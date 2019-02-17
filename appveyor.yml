@@ -2,12 +2,11 @@ os: Visual Studio 2017
 
 install:
 
-environment:
-  matrix:
-    - platform: x86
-      configuration: Release
-    - platform: x64
-      configuration: Debug
+configuration:
+  - Debug
+  - Release
+platform:
+  - Win32
 
 matrix:
   fast_finish: false
