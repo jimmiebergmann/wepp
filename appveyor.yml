@@ -27,7 +27,7 @@ for:
     only:
       - configuration: Release
         platform: Win32
-   before_build:
+  before_build:
     - echo "Not building release."
   
 after_build:
