@@ -5,6 +5,7 @@ doc
 obj
 enc_temp_folder
 cmake
+build
 
 # Temporary
 *~

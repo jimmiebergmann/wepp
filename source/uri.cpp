@@ -32,10 +32,14 @@ namespace Wepp
     { }
 
     Uri::Uri(const char * uri)
-    { }
+    {
+        parse(uri);
+    }
 
     Uri::Uri(const std::string & uri)
-    { }
+    {
+        parse(uri);
+    }
 
     bool Uri::parse(const char * parse)
     {
