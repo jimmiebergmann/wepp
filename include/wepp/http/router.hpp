@@ -32,8 +32,8 @@
 #include "wepp/http/response.hpp"
 #include <string>
 #include <map>
-#include <memory>
 #include <functional>
+#include <vector>
 
 /**
 * Wepp namespace.
@@ -57,7 +57,7 @@ namespace Wepp
         *
         *
         */
-        class WEPP_API Route
+        class WEPP_API Router
         {
 
         public:
@@ -72,13 +72,13 @@ namespace Wepp
             * Constuctor.
             *
             */
-            Route();
+            Router();
 
             /**
             * Destructor.
             *
             */
-            ~Route();
+            ~Router();
 
             /**
             * Get number of routed methods.
@@ -89,8 +89,17 @@ namespace Wepp
             /**
             * Gets existing route method, or creates a new empty one if method does not exist in the method map.
             *
+            * @param[in] method - Enumerator representing method.
+            *
             */
             RouteMethod & operator[](const Method method);
+
+            /**
+            * Gets existing route method, or creates a new empty one if method does not exist in the method map.
+            *
+            * @param[in] method - Name of method to route.
+            *
+            */
             RouteMethod & operator[](const std::string & method);
 
         private:
@@ -99,7 +108,7 @@ namespace Wepp
             * Deleted copy constructor.
             *
             */
-            Route(const Route &) = delete;
+            Router(const Router &) = delete;
 
             std::map<std::string, RouteMethod*> m_methods; /**< Map of routed methods. */
 
@@ -114,6 +123,12 @@ namespace Wepp
         {
 
         public:
+
+            /**
+            * Destructor.
+            *
+            */
+            ~RouteMethod();
 
             /**
             * Constructing method routing by name.
@@ -131,7 +146,7 @@ namespace Wepp
             * Gets existing route path, or creates a new empty one if path does not exist in the path map.
             *
             */
-            //RoutePath & operator[](const std::string & path);
+            RoutePath & operator[](const std::string & path);
 
         private:
 
@@ -141,7 +156,47 @@ namespace Wepp
             */
             RouteMethod(const RouteMethod &) = delete;
 
-            std::string m_name; /**< Name of method. */
+            struct RegularNode;
+            struct TagNode;
+            typedef std::map<std::string, RegularNode*> RegularTree;  /**< Route regular tree map typedef. */
+            typedef std::vector<TagNode*> TagTree;           /**< Route wildcard tree vector typedef. */
+
+            /**
+            * Structure describing one node of the route tree.
+            *
+            */
+            struct RegularNode
+            {
+                RegularNode();
+                ~RegularNode();
+
+                RegularTree regularTree;
+                TagTree     tagTree;
+                RoutePath * routePath;
+            };
+
+            struct Tag
+            {
+                std::string key;
+                std::string regex;
+            };
+
+            struct TagNode
+            {
+                TagNode();
+                ~TagNode();
+
+                RegularTree regularTree;
+                TagTree     tagTree;
+                RoutePath * routePath;
+
+                std::string value;
+                std::vector<Tag*> tags;
+            };
+
+
+            std::string m_name;     /**< Name of method. */
+            RegularTree m_rootNode; /**< Root note of route path tree. */
 
         };
 
@@ -161,9 +216,12 @@ namespace Wepp
             * @param[in] callback - Routing callback function.
             *
             */
-            RoutePath(Route::CallbackFunc callback);
+            RoutePath(const Router::CallbackFunc & callback);
 
-            const Route::CallbackFunc callback; /**< Callback function. */
+
+            RoutePath & operator=(const Router::CallbackFunc & callback);
+
+            Router::CallbackFunc callback; /**< Callback function. */
 
         private:
 

@@ -93,7 +93,7 @@ namespace Wepp
         bool parse(const std::string & uri);
 
         /**
-        * Wiping the entire URI data structure.
+        * Clearing the entire URI data structure.
         *
         */
         void clear();

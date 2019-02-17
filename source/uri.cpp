@@ -44,7 +44,7 @@ namespace Wepp
 
     bool Uri::parse(const char * uri)
     {
-        std::regex fullRegex(R"(^(?:([a-zA-Z0-9$\-_.+!*‘(),%]*)?:)?(?://([a-zA-Z0-9$\-_.+!*‘(),%:@]*))?([a-zA-Z0-9$\-_.+!*‘(),/%:=@]*)?(?:\?([a-zA-Z0-9$\-_.+!*‘(),%=&]*))?(?:#([a-zA-Z0-9$\-_.+!*‘(),%]*))?)");
+        std::regex fullRegex(R"(^(?:([a-zA-Z0-9+\.-]*)?:)?(?://([^/]*))?([^\?]*)(?:\?([^#]*))?(?:#(.*))?)");
         std::cmatch matches;
         
         if (!std::regex_search(uri, matches, fullRegex))
