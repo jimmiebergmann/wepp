@@ -4,6 +4,7 @@ bin
 doc
 obj
 enc_temp_folder
+cmake
 
 # Temporary
 *~

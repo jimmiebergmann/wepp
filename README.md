@@ -11,6 +11,14 @@ Follow for more updates.
 * C++11
 * googletest (git submodule)
 
+## Build
+```sh
+$ mkdir build
+$ cd build
+$ cmake .
+$ cmake --build .
+```
+
 ## Example
 Not yet.
 

@@ -5,36 +5,24 @@ install:
 environment:
   matrix:
     - platform: x86
-      configuration: Static Debug
-    - platform: x86
-      configuration: Static Release
-    - platform: x86
-      configuration: Dynamic Debug
-    - platform: x86
-      configuration: Dynamic Release
+      configuration: Release
     - platform: x64
-      configuration: Static Debug
-    - platform: x64
-      configuration: Static Release
-    - platform: x64
-      configuration: Dynamic Debug
-    - platform: x64
-      configuration: Dynamic Release
+      configuration: Debug
 
 matrix:
   fast_finish: false
 
 before_build:
   - git submodule update --init --recursive
-  - cd vendor\googletest\googletest
+  - mkdir build2
+  - cd build2
   - cmake .
-  - devenv.exe gtest.sln /Build /SolnConfigName Debug
-  - devenv.exe gtest.sln /Build /SolnConfigName Release
-  - cd ..\..\..\
+  - cmake --build .
+  - cd ..
   
 build:
   parallel: true
-  project: build\visualstudio\wepp.sln
+  project: build2\wepp.sln
   verbosity: minimal
   
 after_build:
