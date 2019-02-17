@@ -16,7 +16,7 @@ before_build:
   - git submodule update --init --recursive
   - mkdir build2
   - cd build2
-  - cmake .
+  - cmake ../
   - cmake --build .
   - cd ..
   
