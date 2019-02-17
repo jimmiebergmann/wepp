@@ -26,19 +26,17 @@
 #ifndef WEPP_URI_HPP
 #define WEPP_URI_HPP
 
-#include "build.hpp"
+#include "wepp/build.hpp"
 #include <string>
 
-
-
-/*
+/**
 * Wepp namespace.
 *
 */
 namespace Wepp
 {
 
-    /*
+    /**
     * Uniform Resource Identifier structure and parser.
     *
     * @see https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
@@ -60,7 +58,7 @@ namespace Wepp
         * Constuctor.
         * Initializing by parsing input data.
         *
-        * @param uri[in] - Input uri to parse.
+        * @param[in] uri - Input uri to parse.
         * @see parse
         *
         */
@@ -70,7 +68,7 @@ namespace Wepp
         * Constuctor.
         * Initializing by parsing input data.
         *
-        * @param uri[in] - Input uri to parse.
+        * @param[in] uri - Input uri to parse.
         * @see parse
         *
         */
@@ -79,7 +77,7 @@ namespace Wepp
         /**
         * Parsing input data and populating URI data structure.
         *
-        * @param uri[in] - data to parse.
+        * @param[in] uri - data to parse.
         * @see parse
         *
         */
@@ -88,7 +86,7 @@ namespace Wepp
         /**
         * Parsing input data and populating URI data structure.
         *
-        * @param uri[in] - data to parse.
+        * @param[in] uri - data to parse.
         * @see parse
         *
         */

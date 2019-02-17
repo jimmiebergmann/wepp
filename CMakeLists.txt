@@ -2,13 +2,13 @@ project (wepp)
 cmake_minimum_required(VERSION 2.8)
 
 # Find files
-file(GLOB test_files "${CMAKE_SOURCE_DIR}/test/*.cpp" "${CMAKE_SOURCE_DIR}/test/*.hpp")
-file(GLOB wepp_src "${CMAKE_SOURCE_DIR}/source/*.cpp")
-file(GLOB wepp_inc "${CMAKE_SOURCE_DIR}/include/wepp/*.hpp")
+file(GLOB_RECURSE test_files "${CMAKE_SOURCE_DIR}/test/*.cpp" "${CMAKE_SOURCE_DIR}/test/*.hpp")
+file(GLOB_RECURSE wepp_src "${CMAKE_SOURCE_DIR}/source/*.cpp")
+file(GLOB_RECURSE wepp_inc "${CMAKE_SOURCE_DIR}/include/wepp/*.hpp")
 
 
 # Wepp
-include_directories ("${CMAKE_SOURCE_DIR}/include/wepp") # Include header files
+include_directories ("${CMAKE_SOURCE_DIR}/include") # Include header files
 add_library(wepp SHARED ${wepp_src} ${wepp_inc}) # Create shared library
 target_compile_definitions(wepp PRIVATE WEPP_EXPORTS)
 install(TARGETS wepp DESTINATION "${CMAKE_SOURCE_DIR}lib") # Install library
@@ -25,7 +25,7 @@ install(FILES ${wepp_inc} DESTINATION "${CMAKE_SOURCE_DIR}/include") # Install l
 
 
 # Wepp static
-include_directories ("${CMAKE_SOURCE_DIR}/include/wepp")
+include_directories ("${CMAKE_SOURCE_DIR}/include")
 add_library(wepp_static STATIC ${wepp_src} ${wepp_inc}) # Create shared library
 target_compile_definitions(wepp_static PRIVATE WEPP_STATIC)
 install(TARGETS wepp_static DESTINATION "${CMAKE_SOURCE_DIR}lib") # Install library

@@ -1,6 +1,9 @@
 #include "gtest/gtest.h"
 
 #include "uri_test.hpp"
+#include "http_method_test.hpp"
+#include "http_route_test.hpp"
+#include "http_server_test.hpp"
 
 int main(int argc, char ** argv)
 {

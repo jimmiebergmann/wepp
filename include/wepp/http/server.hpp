@@ -23,61 +23,50 @@
 *
 */
 
-#include "wepp/uri.hpp"
-#include <regex>
+#ifndef WEPP_HTTP_SERVER_HPP
+#define WEPP_HTTP_SERVER_HPP
 
+#include "wepp/build.hpp"
+#include <string>
+
+/**
+* Wepp namespace.
+*
+*/
 namespace Wepp
 {
 
-    Uri::Uri()
-    { }
-
-    Uri::Uri(const char * uri)
+    /**
+    * Http namespace.
+    *
+    */
+    namespace Http
     {
-        parse(uri);
-    }
 
-    Uri::Uri(const std::string & uri)
-    {
-        parse(uri);
-    }
-
-    bool Uri::parse(const char * uri)
-    {
-        std::regex fullRegex(R"(^(?:([a-zA-Z0-9$\-_.+!*‘(),%]*)?:)?(?://([a-zA-Z0-9$\-_.+!*‘(),%:@]*))?([a-zA-Z0-9$\-_.+!*‘(),/%:=@]*)?(?:\?([a-zA-Z0-9$\-_.+!*‘(),%=&]*))?(?:#([a-zA-Z0-9$\-_.+!*‘(),%]*))?)");
-        std::cmatch matches;
-        
-        if (!std::regex_search(uri, matches, fullRegex))
+        /**
+        * Http server.
+        *
+        *
+        */
+        class WEPP_API Server
         {
-            return false;
-        }
 
-        schema = matches[1];
-        authority = matches[2];
-        path = matches[3];
-        query = matches[4];
-        fragment = matches[5];
+        public:
 
-        return true;
-    }
+            /**
+            * Constuctor.
+            *
+            */
+            Server();
 
-    bool Uri::parse(const std::string & uri)
-    {
-        return parse(uri.c_str());
-    }
+        private:
 
-    void Uri::clear()
-    {
-        schema = "";
-        authority = "";
-        path = "";
-        query = "";
-        fragment = "";
-    }
 
-    bool Uri::isEmpty()
-    {
-        return schema.empty() && authority.empty() && path.empty() && query.empty() && fragment.empty();
+
+        };
+
     }
 
 }
+
+#endif

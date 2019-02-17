@@ -23,61 +23,24 @@
 *
 */
 
-#include "wepp/uri.hpp"
-#include <regex>
+#include "wepp/http/method.hpp"
 
 namespace Wepp
 {
 
-    Uri::Uri()
-    { }
-
-    Uri::Uri(const char * uri)
+    namespace Http
     {
-        parse(uri);
-    }
 
-    Uri::Uri(const std::string & uri)
-    {
-        parse(uri);
-    }
-
-    bool Uri::parse(const char * uri)
-    {
-        std::regex fullRegex(R"(^(?:([a-zA-Z0-9$\-_.+!*‘(),%]*)?:)?(?://([a-zA-Z0-9$\-_.+!*‘(),%:@]*))?([a-zA-Z0-9$\-_.+!*‘(),/%:=@]*)?(?:\?([a-zA-Z0-9$\-_.+!*‘(),%=&]*))?(?:#([a-zA-Z0-9$\-_.+!*‘(),%]*))?)");
-        std::cmatch matches;
-        
-        if (!std::regex_search(uri, matches, fullRegex))
+        static const std::string s_methodNames[] =
         {
-            return false;
+            "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "OPTION", "CONNECT", "PATCH"
+        };
+
+        const std::string & getMethodName(const Method method)
+        {
+            return s_methodNames[static_cast<size_t>(method)];
         }
 
-        schema = matches[1];
-        authority = matches[2];
-        path = matches[3];
-        query = matches[4];
-        fragment = matches[5];
-
-        return true;
-    }
-
-    bool Uri::parse(const std::string & uri)
-    {
-        return parse(uri.c_str());
-    }
-
-    void Uri::clear()
-    {
-        schema = "";
-        authority = "";
-        path = "";
-        query = "";
-        fragment = "";
-    }
-
-    bool Uri::isEmpty()
-    {
-        return schema.empty() && authority.empty() && path.empty() && query.empty() && fragment.empty();
     }
 
 }
