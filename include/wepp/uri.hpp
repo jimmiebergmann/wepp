@@ -51,7 +51,7 @@ namespace Wepp
 
         /**
         * Constuctor.
-        * Initializing empty URI structure.
+        * Initializing empty URI data structure.
         *
         */
         Uri();
@@ -77,31 +77,34 @@ namespace Wepp
         Uri(const std::string & uri);
 
         /**
-        * Parsing input data and populating URI structure.
+        * Parsing input data and populating URI data structure.
         *
         * @param uri[in] - data to parse.
         * @see parse
         *
         */
-        bool parse(const char * parse);
+        bool parse(const char * uri);
 
         /**
-        * Parsing input data and populating URI structure.
+        * Parsing input data and populating URI data structure.
         *
         * @param uri[in] - data to parse.
         * @see parse
         *
         */
-        bool parse(const std::string & parse);
+        bool parse(const std::string & uri);
 
         /**
-        * Validates and updates Uri members if needed.
-        * For example, schema is changed to "http" if schema == "http:".
-        *
-        * @return true if validation succeeded, else false.
+        * Wiping the entire URI data structure.
         *
         */
-        bool validate();
+        void clear();
+
+        /**
+        * Checks if the URI data structure is empty.
+        *
+        */
+        bool isEmpty();
 
         std::string schema;    /**< Schema name. */
         std::string authority; /**< Authority string. */

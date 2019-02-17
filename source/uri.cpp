@@ -24,6 +24,7 @@
 */
 
 #include "uri.hpp"
+#include <regex>
 
 namespace Wepp
 {
@@ -41,26 +42,39 @@ namespace Wepp
         parse(uri);
     }
 
-    bool Uri::parse(const char * parse)
+    bool Uri::parse(const char * uri)
     {
-        return false;
-    }
-
-    bool Uri::parse(const std::string & parse)
-    {
-        return false;
-    }
-
-    bool Uri::validate()
-    {
-        // Schema
-        auto schemaEnd = schema.find_first_of(':');
-        if (schemaEnd != std::string::npos)
+        std::regex fullRegex(R"(^(?:([a-zA-Z0-9$\-_.+!*‘(),%]*)?:)?(?://([a-zA-Z0-9$\-_.+!*‘(),%:@]*))?([a-zA-Z0-9$\-_.+!*‘(),/%:=@]*)?(?:\?([a-zA-Z0-9$\-_.+!*‘(),%=&]*))?(?:#([a-zA-Z0-9$\-_.+!*‘(),%]*))?)");
+        std::cmatch matches;
+        if (!std::regex_search(uri, matches, fullRegex))
         {
-            schema = schema.substr(0, schemaEnd);
+            return false;
         }
 
-        return false;
+        schema = matches[1];
+        authority = matches[2];
+        path = matches[3];
+        query = matches[4];
+        fragment = matches[5];
+    }
+
+    bool Uri::parse(const std::string & uri)
+    {
+        return parse(uri.c_str());
+    }
+
+    void Uri::clear()
+    {
+        schema = "";
+        authority = "";
+        path = "";
+        query = "";
+        fragment = "";
+    }
+
+    bool Uri::isEmpty()
+    {
+        return schema.empty() && authority.empty() && path.empty() && query.empty() && fragment.empty();
     }
 
 }
