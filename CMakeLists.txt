@@ -60,7 +60,7 @@ set_target_properties( test
 target_link_libraries(test gtest_main wepp)
 
 
-# Everything target
+# Complete target, for building everything.
 add_custom_target(complete)
 add_dependencies(complete wepp)
 add_dependencies(complete wepp_static)

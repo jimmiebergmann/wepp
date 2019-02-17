@@ -16,7 +16,9 @@ Follow for more updates.
 $ mkdir build
 $ cd build
 $ cmake .
-$ cmake --build . --target complete
+$ cmake --build . --target complete --config debug
+or
+$ cmake --build . --target complete --config release
 ```
 
 ## Example

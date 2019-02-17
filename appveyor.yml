@@ -1,7 +1,5 @@
 os: Visual Studio 2017
 
-install:
-
 configuration:
   - Debug
   - Release
@@ -22,6 +20,15 @@ build:
   parallel: true
   project: build\wepp.sln
   verbosity: minimal
+
+for:
+-
+  matrix:
+    only:
+      - configuration: Release
+        platform: Win32
+   before_build:
+    - echo "Not building release."
   
 after_build:
     - bin\test.exe
