@@ -51,7 +51,7 @@
 
     // Define as export or import, if FLARE_EXPORTS is defined.
     #if defined(WEPP_PLATFORM_WINDOWS)
-        #if defined(WEPP_EXPORT)
+        #if defined(WEPP_EXPORTS)
             #define WEPP_API __declspec(dllexport)
         #else
             #define WEPP_API __declspec(dllimport)

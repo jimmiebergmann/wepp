@@ -16,7 +16,7 @@ Follow for more updates.
 $ mkdir build
 $ cd build
 $ cmake .
-$ cmake --build .
+$ cmake --build . --target complete
 ```
 
 ## Example
