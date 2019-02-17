@@ -16,12 +16,11 @@ before_build:
   - mkdir build
   - cd build
   - cmake ../
-  - cmake --build . --target complete
   - cd ..
   
 build:
   parallel: true
-  project: build2\wepp.sln
+  project: build\wepp.sln
   verbosity: minimal
   
 after_build:
