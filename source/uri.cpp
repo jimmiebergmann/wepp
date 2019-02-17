@@ -46,6 +46,7 @@ namespace Wepp
     {
         std::regex fullRegex(R"(^(?:([a-zA-Z0-9$\-_.+!*‘(),%]*)?:)?(?://([a-zA-Z0-9$\-_.+!*‘(),%:@]*))?([a-zA-Z0-9$\-_.+!*‘(),/%:=@]*)?(?:\?([a-zA-Z0-9$\-_.+!*‘(),%=&]*))?(?:#([a-zA-Z0-9$\-_.+!*‘(),%]*))?)");
         std::cmatch matches;
+        
         if (!std::regex_search(uri, matches, fullRegex))
         {
             return false;
@@ -56,6 +57,8 @@ namespace Wepp
         path = matches[3];
         query = matches[4];
         fragment = matches[5];
+
+        return true;
     }
 
     bool Uri::parse(const std::string & uri)
