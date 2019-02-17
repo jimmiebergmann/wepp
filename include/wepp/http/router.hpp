@@ -50,7 +50,7 @@ namespace Wepp
     {
 
         class RouteMethod;
-        class RoutePath;
+        class RouteCallback;
 
         /**
         * Http routing class.
@@ -125,6 +125,18 @@ namespace Wepp
         public:
 
             /**
+            * Structure describing tag information.
+            *
+            */
+            struct Tag
+            {
+                Tag(const std::string & key, const std::string & regex);
+
+                std::string key;
+                std::string regex;
+            };
+
+            /**
             * Destructor.
             *
             */
@@ -146,7 +158,18 @@ namespace Wepp
             * Gets existing route path, or creates a new empty one if path does not exist in the path map.
             *
             */
-            RoutePath & operator[](const std::string & path);
+            RouteCallback & operator[](const std::string & path);
+
+            /**
+            * Find callback function by path.
+            *
+            * @param[in] path - Path to find in route tree.
+            * @param[out] tags - Vector of matching tags.
+            *
+            * @return Found function.
+            *
+            */
+            const Router::CallbackFunc & find(const std::string & path, std::vector<std::reference_wrapper<const Tag>> & tags) const;
 
         private:
 
@@ -156,47 +179,28 @@ namespace Wepp
             */
             RouteMethod(const RouteMethod &) = delete;
 
-            struct RegularNode;
-            struct TagNode;
-            typedef std::map<std::string, RegularNode*> RegularTree;  /**< Route regular tree map typedef. */
-            typedef std::vector<TagNode*> TagTree;           /**< Route wildcard tree vector typedef. */
+            struct RouteNode;
+            typedef std::map<std::string, RouteNode*> RouteTree;  /**< Route regular tree map typedef. */
+
 
             /**
-            * Structure describing one node of the route tree.
+            * Structure describing a node of the route tree.
             *
             */
-            struct RegularNode
+            struct RouteNode
             {
-                RegularNode();
-                ~RegularNode();
+                RouteNode();
+                ~RouteNode();
 
-                RegularTree regularTree;
-                TagTree     tagTree;
-                RoutePath * routePath;
-            };
-
-            struct Tag
-            {
-                std::string key;
-                std::string regex;
-            };
-
-            struct TagNode
-            {
-                TagNode();
-                ~TagNode();
-
-                RegularTree regularTree;
-                TagTree     tagTree;
-                RoutePath * routePath;
-
-                std::string value;
+                RouteTree regularTree;
+                RouteTree tagTree;
+                RouteCallback * routeCallback;
                 std::vector<Tag*> tags;
             };
 
 
             std::string m_name;     /**< Name of method. */
-            RegularTree m_rootNode; /**< Root note of route path tree. */
+            RouteNode m_rootNode;   /**< Root note of route path tree. */
 
         };
 
@@ -205,7 +209,7 @@ namespace Wepp
         *
         *
         */
-        class WEPP_API RoutePath
+        class WEPP_API RouteCallback
         {
 
         public:
@@ -216,10 +220,19 @@ namespace Wepp
             * @param[in] callback - Routing callback function.
             *
             */
-            RoutePath(const Router::CallbackFunc & callback);
+            RouteCallback();
 
+            /**
+            * Assigning callback function.
+            *
+            */
+            RouteCallback & operator=(const Router::CallbackFunc & callback);
 
-            RoutePath & operator=(const Router::CallbackFunc & callback);
+            /**
+            * Gets callback functions.
+            *
+            */
+            //const Router::CallbackFunc & callback() const;
 
             Router::CallbackFunc callback; /**< Callback function. */
 
@@ -229,7 +242,9 @@ namespace Wepp
             * Deleted copy constructor.
             *
             */
-            RoutePath(const RoutePath &) = delete;
+            RouteCallback(const RouteCallback &) = delete;
+
+            
 
         };
 

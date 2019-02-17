@@ -110,8 +110,58 @@ TEST(Router, method)
 
 TEST(RouteMethod, path)
 {
-    Http::Router router;
+    {
+        Http::Router router;
+        EXPECT_NO_THROW(router[Http::Method::Get]["/work/task/123"]);
+        EXPECT_NO_THROW(router[Http::Method::Get]["/work/task/123"]);
+        router[Http::Method::Get]["/work/task/123"] = [](const Http::Request & request, Http::Response & response) {};
 
-    router[""]["/work/task/<id,^[0/-9]+$>/speed/<name>/"];
+        std::vector<std::reference_wrapper<const Http::RouteMethod::Tag>> tags;
+        Http::Router::CallbackFunc func;
 
+        EXPECT_TRUE(tags.size() == 0);
+        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/123", tags));
+        EXPECT_TRUE(func != nullptr);
+        EXPECT_TRUE(tags.size() == 0);
+
+        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/12foo3", tags));
+        EXPECT_TRUE(func == nullptr);
+        EXPECT_TRUE(tags.size() == 0);
+    }
+
+   /* {
+        Http::Router router;
+        EXPECT_NO_THROW(router[Http::Method::Get]["/work/task/<id,^[0/-9]+$>"]);
+
+        std::vector<std::reference_wrapper<const Http::RouteMethod::Tag>> tags;
+        Http::Router::CallbackFunc func;
+
+        EXPECT_TRUE(tags.size() == 0);
+        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/123", tags));
+        EXPECT_TRUE(func != nullptr);
+        EXPECT_TRUE(tags.size() == 1);
+
+        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/12foo3", tags));
+        EXPECT_TRUE(func == nullptr);
+        EXPECT_TRUE(tags.size() == 0);
+
+    }*/
+    
+
+   // router[""]["/work/task/ <id,^[0/-9]+$>__<c<<</o,ol> /speed/<name>/"];
+
+    /*
+    router[""]["/work/task/kid"] = [](const Http::Request & request, Http::Response & response)
+    {
+        std::cout << "Hello world!" << std::endl;
+    };
+
+    auto & route = router[""]["/work/task/kid"];
+
+
+    Http::Request req;
+    Http::Response resp;
+    route.callback()(req,resp);
+    */
+   
 }
