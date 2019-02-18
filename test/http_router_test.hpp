@@ -116,52 +116,72 @@ TEST(RouteMethod, path)
         EXPECT_NO_THROW(router[Http::Method::Get]["/work/task/123"]);
         router[Http::Method::Get]["/work/task/123"] = [](const Http::Request & request, Http::Response & response) {};
 
-        std::vector<std::reference_wrapper<const Http::RouteMethod::Tag>> tags;
+        std::vector<std::string> matches;
         Http::Router::CallbackFunc func;
 
-        EXPECT_TRUE(tags.size() == 0);
-        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/123", tags));
+        EXPECT_TRUE(matches.size() == 0);
+        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/123", matches));
         EXPECT_TRUE(func != nullptr);
-        EXPECT_TRUE(tags.size() == 0);
+        EXPECT_TRUE(matches.size() == 0);
 
-        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/12foo3", tags));
+        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/12foo3", matches));
         EXPECT_TRUE(func == nullptr);
-        EXPECT_TRUE(tags.size() == 0);
+        EXPECT_TRUE(matches.size() == 0);
     }
 
-   /* {
+    {
         Http::Router router;
-        EXPECT_NO_THROW(router[Http::Method::Get]["/work/task/<id,^[0/-9]+$>"]);
+        std::string routePath = "/work/task/_<[0/-9]+>_<.*>";
+        EXPECT_NO_THROW(router[Http::Method::Get][routePath]);
+        router[Http::Method::Get][routePath] = [](const Http::Request & request, Http::Response & response) {};
 
-        std::vector<std::reference_wrapper<const Http::RouteMethod::Tag>> tags;
+        std::vector<std::string> matches;
         Http::Router::CallbackFunc func;
 
-        EXPECT_TRUE(tags.size() == 0);
-        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/123", tags));
+        EXPECT_TRUE(matches.size() == 0);
+        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/_123_cool", matches));
         EXPECT_TRUE(func != nullptr);
-        EXPECT_TRUE(tags.size() == 1);
+        EXPECT_TRUE(matches.size() == 2);
+        EXPECT_TRUE(matches[0] == "123");
+        EXPECT_TRUE(matches[1] == "cool");
 
-        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/12foo3", tags));
+        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/12foo3", matches));
         EXPECT_TRUE(func == nullptr);
-        EXPECT_TRUE(tags.size() == 0);
+        EXPECT_TRUE(matches.size() == 0);
+    }
 
-    }*/
-    
-
-   // router[""]["/work/task/ <id,^[0/-9]+$>__<c<<</o,ol> /speed/<name>/"];
-
-    /*
-    router[""]["/work/task/kid"] = [](const Http::Request & request, Http::Response & response)
     {
-        std::cout << "Hello world!" << std::endl;
-    };
+        Http::Router router;
+        std::string routePath = "/work/task/_<[0/-9]+\\>>_<.*>";
+        EXPECT_NO_THROW(router[Http::Method::Get][routePath]);
+        router[Http::Method::Get][routePath] = [](const Http::Request & request, Http::Response & response) {};
 
-    auto & route = router[""]["/work/task/kid"];
+        std::vector<std::string> matches;
+        Http::Router::CallbackFunc func;
 
+        EXPECT_TRUE(matches.size() == 0);
+        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/_123>_cool", matches));
+        EXPECT_TRUE(func != nullptr);
+        EXPECT_TRUE(matches.size() == 2);
+        EXPECT_TRUE(matches[0] == "123>");
+        EXPECT_TRUE(matches[1] == "cool");
+    }
 
-    Http::Request req;
-    Http::Response resp;
-    route.callback()(req,resp);
-    */
+    {
+        Http::Router router;
+        std::string routePath = "/work/task/_<>_<>";
+        EXPECT_NO_THROW(router[Http::Method::Get][routePath]);
+        router[Http::Method::Get][routePath] = [](const Http::Request & request, Http::Response & response) {};
+
+        std::vector<std::string> matches;
+        Http::Router::CallbackFunc func;
+
+        EXPECT_TRUE(matches.size() == 0);
+        EXPECT_NO_THROW(func = router[Http::Method::Get].find("/work/task/_123>_cool", matches));
+        EXPECT_TRUE(func != nullptr);
+        EXPECT_TRUE(matches.size() == 2);
+        EXPECT_TRUE(matches[0] == "123>");
+        EXPECT_TRUE(matches[1] == "cool");
+    }
    
 }

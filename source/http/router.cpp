@@ -97,10 +97,9 @@ namespace Wepp
         RouteCallback & RouteMethod::operator[](const std::string & path)
         {
             std::vector<std::string> dirs;
-            std::regex findDirRegex(R"((?:/?((?:[^/]*<[^>]*>)*)?([^/]*)))");
-            std::regex findTagRegex(R"(<[^>]*>)");
-            std::regex findTagDataRegex(R"((?:<([^>]*)>))");
-            std::set<std::string> usedTagKeys;
+            std::regex findDirRegex(R"(/?((?:[^/]*<[^>]*>)*[^/]*)?)"); //R"((?:/?((?:[^/]*<[^>]*>)*)?([^/]*)))");
+            std::regex findTagRegex(R"(<(\\?.)*?>)");// R"(<[^>]*>)");
+            std::regex findTagDataRegex(R"(<((?:\\?.)*?)>)");
 
             const char * iter = path.c_str();
             for (std::cmatch m; *iter && std::regex_search(iter, m, findDirRegex); iter += m[0].length())
@@ -130,43 +129,45 @@ namespace Wepp
                 // Insert new node, but first check if it's a regular or a tag node.
                 if (std::regex_search(dir, findTagRegex))
                 {
-                    // Insert tag node.
-                    RouteNode * newRouteNode = new RouteNode();
-                    currentNode->tagTree.insert({ dir, newRouteNode });
-                    currentNode = newRouteNode;
+                    std::unique_ptr<RouteNode> newRouteNode(new RouteNode());
 
-                    // Find data in each tag.
-                    const char * tagIter = dir.c_str();
-                    for (std::cmatch m; *tagIter && std::regex_search(tagIter, m, findTagDataRegex); tagIter += m[0].length())
+                    std::string tagRegexDir = dir;
+                    std::string tagDir = dir;
+                    size_t currSearchPos = 0;
+
+                    // Find all tags
+                    for (std::smatch match; std::regex_search(tagRegexDir, match, findTagDataRegex);tagRegexDir = match.suffix())
                     {
-                        std::string tagKey = m[1];
-                        std::string tagRegex = "";
-
-                        size_t tagRegexPos = tagKey.find_first_of(',');
-
-                        if (tagRegexPos != std::string::npos)
+                        size_t matchLength = match.length();
+                        size_t matchPosition = match.position();
+                        std::string groupedMatch;
+                        
+                        if (match[1].str().size())
                         {
-                            tagRegex = tagKey.substr(tagRegexPos + 1);
-                            tagKey.resize(tagRegexPos);
+                            groupedMatch = "(" + match[1].str() + ")";
                         }
-
-                        // Make sure the tag names are unique.
-                        auto usedTagIt = usedTagKeys.find(tagKey);
-                        if (usedTagIt != usedTagKeys.end())
+                        else
                         {
-                            throw std::runtime_error("Name of tag \"" + tagKey + "\" has already been routed.");
+                            groupedMatch = "(.*)";
                         }
-                        usedTagKeys.insert(tagKey);
-
-                        Tag * newTag = new Tag(tagKey, tagRegex);
-                        newRouteNode->tags.push_back(newTag); 
+                    
+                        // Replace tag with regex
+                        tagDir.replace(matchPosition + currSearchPos, matchLength, groupedMatch);
+                        currSearchPos += groupedMatch.length() + match.prefix().length();
                     }
 
+                    // Add new route to previous node.
+                    newRouteNode->dir = tagDir;
+                    currentNode->tagTree.insert({ dir, newRouteNode.get() });
+                    
+
+                    currentNode = newRouteNode.release();
                     continue;
                 }
 
                 // Insert regular node.
                 RouteNode * newRouteNode = new RouteNode();
+                newRouteNode->dir = dir;
                 currentNode->regularTree.insert({ dir, newRouteNode});
                 currentNode = newRouteNode;
             }
@@ -179,18 +180,11 @@ namespace Wepp
             return *(currentNode->routeCallback);
         }
 
-        const Router::CallbackFunc & RouteMethod::find(const std::string & path, std::vector<std::reference_wrapper<const Tag>> & tags) const
+        const Router::CallbackFunc & RouteMethod::find(const std::string & path, std::vector<std::string> & matches) const
         {
             static const Router::CallbackFunc s_defaultCallbackFunc = nullptr;
 
-            tags.clear();
-
-            // Validate path.
-            /*std::regex validPathRegex(R"(^[^<>]*)");
-            if (!std::regex_search(path, validPathRegex))
-            {
-                return s_defaultCallbackFunc;
-            }*/
+            matches.clear();
 
             std::vector<std::string> dirs;
             std::regex findDirRegex(R"((?:/?([^/]*)))");
@@ -202,28 +196,49 @@ namespace Wepp
             }
 
             const RouteNode * currentNode = &m_rootNode;
-            const RouteCallback * currentRouteCallback = currentNode->routeCallback;
             for (auto const & dir : dirs)
             {
-                auto it = currentNode->regularTree.find(dir);
-
                 // Find regular dir and more to next one.
+                auto it = currentNode->regularTree.find(dir);
                 if (it != currentNode->regularTree.end())
                 {
                     currentNode = it->second;
-                    currentRouteCallback = it->second->routeCallback;
                     continue;
                 }
 
-                // Find tag node.
+                // Find tag node using regex.
+                bool foundTagDir = false;
+                for (it = currentNode->tagTree.begin(); it != currentNode->tagTree.end(); it++)
+                {
+                    std::regex findRegex(it->second->dir);
+                    std::smatch match;
 
-                // Failed to find any more route.
+                    if (std::regex_search(dir, match, findRegex))
+                    {
+                        foundTagDir = true;
+
+                        for (size_t i = 1; i < match.size(); i++)
+                        {
+                            matches.push_back(match[i]);
+                        }
+
+                        currentNode = it->second;
+                        break;
+                    }
+                }
+
+                if (foundTagDir)
+                {
+                    continue;
+                }
+
+                // Failed to find any route.
                 return s_defaultCallbackFunc;
             }
 
-            if (currentRouteCallback)
+            if (currentNode->routeCallback)
             {
-                return currentRouteCallback->callback;
+                return currentNode->routeCallback->callback;
             }
             return s_defaultCallbackFunc;
         }
@@ -245,11 +260,6 @@ namespace Wepp
                 delete it->second;
             }
 
-            for (auto it = tags.begin(); it != tags.end(); it++)
-            {
-                delete *it;
-            }
-
             if (routeCallback != nullptr)
             {
                 delete routeCallback;
@@ -266,11 +276,6 @@ namespace Wepp
             callback = p_callback;
             return *this;
         }
-
-        /*const Router::CallbackFunc & RouteCallback::callback() const
-        {
-            return m_callback;
-        }*/
        
     }
 

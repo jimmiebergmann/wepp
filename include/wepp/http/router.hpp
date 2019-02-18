@@ -157,6 +157,8 @@ namespace Wepp
             /**
             * Gets existing route path, or creates a new empty one if path does not exist in the path map.
             *
+            * @remarks Directories and regex cannot constist of the characters  '<' and '>'.
+            *
             */
             RouteCallback & operator[](const std::string & path);
 
@@ -169,7 +171,7 @@ namespace Wepp
             * @return Found function.
             *
             */
-            const Router::CallbackFunc & find(const std::string & path, std::vector<std::reference_wrapper<const Tag>> & tags) const;
+            const Router::CallbackFunc & find(const std::string & path, std::vector<std::string> & matches) const;
 
         private:
 
@@ -195,7 +197,7 @@ namespace Wepp
                 RouteTree regularTree;
                 RouteTree tagTree;
                 RouteCallback * routeCallback;
-                std::vector<Tag*> tags;
+                std::string dir;
             };
 
 
