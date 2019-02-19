@@ -1,15 +1,32 @@
+# Function for grouping files. Used for filters in Visual Studio.
+function(createSourceGroups files rootPath)
+	message("================================================")
+	foreach(_source IN ITEMS ${files} )
+		get_filename_component(_source_path "${_source}" PATH)
+		file(RELATIVE_PATH _source_path_rel "${rootPath}" "${_source_path}")
+		message("${_source_path} ${_source_path_rel} ${rootPath}")
+		string(REPLACE "/" "\\" _group_path "${_source_path_rel}")
+		source_group("${_group_path}" FILES "${_source}")
+	endforeach()
+	message("================================================")
+endfunction(createSourceGroups)
+
 project (wepp)
 cmake_minimum_required(VERSION 2.8)
 
 # Find files
 file(GLOB_RECURSE test_files "${CMAKE_SOURCE_DIR}/test/*.cpp" "${CMAKE_SOURCE_DIR}/test/*.hpp")
-file(GLOB_RECURSE wepp_src "${CMAKE_SOURCE_DIR}/source/*.cpp")
-file(GLOB_RECURSE wepp_inc "${CMAKE_SOURCE_DIR}/include/wepp/*.hpp")
-
+file(GLOB_RECURSE wepp_src "${CMAKE_SOURCE_DIR}/source/wepp/*.cpp")
+file(GLOB_RECURSE wepp_inc "${CMAKE_SOURCE_DIR}/include/wepp/*.hpp" "${CMAKE_SOURCE_DIR}/include/wepp/*.inl")
+file(GLOB wepp_files ${wepp_src} ${wepp_inc})
 
 # Wepp
 include_directories ("${CMAKE_SOURCE_DIR}/include") # Include header files
-add_library(wepp SHARED ${wepp_src} ${wepp_inc}) # Create shared library
+add_library(wepp SHARED ${wepp_files}) # Create shared library
+
+createSourceGroups("${wepp_src}" "${CMAKE_SOURCE_DIR}/source")
+createSourceGroups("${wepp_inc}" "${CMAKE_SOURCE_DIR}/include")
+
 target_compile_definitions(wepp PRIVATE WEPP_EXPORTS)
 install(TARGETS wepp DESTINATION "${CMAKE_SOURCE_DIR}lib") # Install library
 set_target_properties( wepp
@@ -26,7 +43,11 @@ install(FILES ${wepp_inc} DESTINATION "${CMAKE_SOURCE_DIR}/include") # Install l
 
 # Wepp static
 include_directories ("${CMAKE_SOURCE_DIR}/include")
-add_library(wepp_static STATIC ${wepp_src} ${wepp_inc}) # Create shared library
+add_library(wepp_static STATIC ${wepp_files}) # Create shared library
+
+createSourceGroups("${wepp_src}" "${CMAKE_SOURCE_DIR}/source")
+createSourceGroups("${wepp_inc}" "${CMAKE_SOURCE_DIR}/include")
+
 target_compile_definitions(wepp_static PRIVATE WEPP_STATIC)
 install(TARGETS wepp_static DESTINATION "${CMAKE_SOURCE_DIR}lib") # Install library
 set_target_properties( wepp_static

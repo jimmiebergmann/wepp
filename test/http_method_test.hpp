@@ -3,7 +3,7 @@
 
 using namespace Wepp;
 
-TEST(Method, name)
+TEST(Method, Name)
 {
     EXPECT_TRUE(Http::getMethodName(Http::Method::Get) == "GET");
     EXPECT_TRUE(Http::getMethodName(Http::Method::Head) == "HEAD");

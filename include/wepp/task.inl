@@ -23,17 +23,7 @@
 *
 */
 
-#include "wepp/http/server.hpp"
-
 namespace Wepp
 {
-
-    namespace Http
-    {
-
-        Server::Server()
-        { }
-
-    }
 
 }

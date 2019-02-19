@@ -23,63 +23,45 @@
 *
 */
 
-#ifndef WEPP_HTTP_SERVER_HPP
-#define WEPP_HTTP_SERVER_HPP
+#include "wepp/http/server.hpp"
+#include <chrono>
 
-#include "wepp/build.hpp"
-#include "wepp/task.hpp"
-#include <thread>
 
-/**
-* Wepp namespace.
-*
-*/
 namespace Wepp
 {
 
-    /**
-    * Http namespace.
-    *
-    */
     namespace Http
     {
 
-        /**
-        * Http server.
-        *
-        *
-        */
-        class WEPP_API Server
+        static void foo(Task<bool> task)
         {
+            int wat = 5;
+        }
 
-        public:
+        Server::Server()
+        { }
 
-            /**
-            * Constuctor.
-            *
-            */
-            Server();
+        Server::~Server()
+        {
+            m_thread.join();
+        }
 
-            /**
-            * Destructor.
-            *
-            */
-            ~Server();
-            
-            /**
-            * Asynchronous function for starting the server.
-            *
-            */
-            Task<> start();
+        Task<> Server::start()
+        {
+            TaskController<> task(false);
 
-        private:
+            m_thread = std::thread([task]() mutable
+            {
+                //std::this_thread::sleep_for(std::chrono::seconds(3));
 
-            std::thread m_thread; /**< Main thread. */
+                task() = true;
+                task.finish();
+            });
+           
 
-        };
+            return task.task();
+        }
 
     }
 
 }
-
-#endif

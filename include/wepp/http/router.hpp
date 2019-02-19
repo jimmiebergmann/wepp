@@ -217,9 +217,8 @@ namespace Wepp
         public:
 
             /**
-            * Constructing path routing by routing callback function.
-            *
-            * @param[in] callback - Routing callback function.
+            * Constructor.
+
             *
             */
             RouteCallback();
@@ -229,12 +228,6 @@ namespace Wepp
             *
             */
             RouteCallback & operator=(const Router::CallbackFunc & callback);
-
-            /**
-            * Gets callback functions.
-            *
-            */
-            //const Router::CallbackFunc & callback() const;
 
             Router::CallbackFunc callback; /**< Callback function. */
 
@@ -246,11 +239,7 @@ namespace Wepp
             */
             RouteCallback(const RouteCallback &) = delete;
 
-            
-
         };
-
-
 
     }
 
