@@ -38,7 +38,7 @@
 namespace Wepp
 {
 
-    template<typename Return = bool> class TaskController;
+    template<typename Return> class TaskController;
 
     /**
     * Task class.
@@ -81,11 +81,20 @@ namespace Wepp
             m_members(std::make_shared<Members>(args...))
         { }
 
+
+        /**
+        * Casting task controller to task.
+        *
+        */
+        Task(const TaskController<Return> & taskController) :
+            m_members(taskController.m_members)
+        { }
+
         /**
         * Destructor.
         *
         */
-        ~Task()
+        virtual ~Task()
         { }
 
         /**
@@ -115,6 +124,28 @@ namespace Wepp
             return m_members->m_status;
         }
 
+        /**
+        * Check if the current status is set to Status::Successful.
+        *
+        */
+        bool successful() const
+        {
+            return m_members->m_status == Status::successful;
+        }
+
+        /**
+        * Check if the current status is set to Status::Failed.
+        *
+        */
+        bool failed() const
+        {
+            return m_members->m_status == Status::Failed;
+        }
+
+        /**
+        * Check if task timed out during the last wait(...) call.
+        *
+        */
         const Status timeout() const
         {
             return m_members->m_timeout;
@@ -170,11 +201,20 @@ namespace Wepp
         */
         struct Members
         {
+
+            /**
+            * Constructor.
+            *
+            */
             Members() :
                 m_status(Status::Pending),
                 m_timeout(false)
             {}
 
+            /**
+            * Constructor, with parameters for return value.
+            *
+            */
             template<typename ... Args>
             Members(Args ... args) :
                 m_status(Status::Pending),
@@ -229,22 +269,13 @@ namespace Wepp
         { }
 
         /**
-        * Convert the task controller to a plain task.
-        *
-        */
-        const Task<Return> & task() const
-        {
-            return *static_cast<const Task<Return> *>(this);
-        }
-
-        /**
         * Mark the task as failed.
         * All wait() operators are terminated.
         *
         */
         void fail()
         {
-            m_members->m_status = Task::Status::Failed;
+            this->m_members->m_status = Task<Return>::Status::Failed;
         }
 
         /**
@@ -254,7 +285,7 @@ namespace Wepp
         */
         void finish()
         {
-            m_members->m_status = Task::Status::Successful;
+            this->m_members->m_status = Task<Return>::Status::Successful;
         }
 
     };

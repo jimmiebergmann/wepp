@@ -43,7 +43,10 @@ namespace Wepp
 
         Server::~Server()
         {
-            m_thread.join();
+            if (m_thread.joinable())
+            {
+                m_thread.join();
+            }
         }
 
         Task<> Server::start()
@@ -59,7 +62,7 @@ namespace Wepp
             });
            
 
-            return task.task();
+            return task;
         }
 
     }

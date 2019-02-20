@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "wepp/http/server.hpp"
 #include <iostream>
-
+#include <future>
 using namespace Wepp;
 
 TEST(Server, Start)
@@ -11,7 +11,6 @@ TEST(Server, Start)
 
         auto ret = server.start().wait();
     }
-    
 
 
     EXPECT_TRUE(true);

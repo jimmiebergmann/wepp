@@ -75,12 +75,6 @@ namespace Wepp
 
 
         // Route method class.
-        // Tag.
-        RouteMethod::Tag::Tag(const std::string & key, const std::string & regex) :
-            key(key),
-            regex(regex)
-        { }
-
         RouteMethod::~RouteMethod()
         {
         }

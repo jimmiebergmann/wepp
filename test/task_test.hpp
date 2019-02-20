@@ -96,8 +96,90 @@ TEST(Task, TaskController)
 TEST(Task, Wait)
 {
     {
-        Task<int> task;
+        auto func = [](const Task<>::Status status, const int value) -> Task<int>
+        {
+            TaskController<int> task(value);
 
+            switch (status)
+            {
+            case Task<>::Status::Successful: task.finish(); break;
+            case Task<>::Status::Failed: task.fail(); break;
+            default: break;
+            }
 
+            return task;
+        };
+
+        {
+            auto task = func(Task<>::Status::Successful, 123).wait();
+            EXPECT_EQ(task.status(), Task<int>::Status::Successful);
+            EXPECT_EQ(task(), 123);
+        }
+        {
+            auto task = func(Task<>::Status::Failed, 404).wait();
+            EXPECT_EQ(task.status(), Task<int>::Status::Failed);
+            EXPECT_EQ(task(), 404);
+        }
+    }
+    {
+
+        class Waiter
+        {
+
+        public:
+
+            ~Waiter()
+            {
+                if (m_thread.joinable())
+                {
+                    m_thread.join();
+                }
+            }
+
+            Task<int> run(const Task<>::Status status, const int value, const std::chrono::duration<double> & sleep)
+            {
+                TaskController<int> task(value);
+
+                m_thread = std::thread([task, status, sleep]() mutable
+                {
+                    std::this_thread::sleep_for(sleep);
+
+                    switch (status)
+                    {
+                    case Task<>::Status::Successful: task.finish(); break;
+                    case Task<>::Status::Failed: task.fail(); break;
+                    default: break;
+                    }
+                });
+
+                return task;
+            }
+
+        private:
+
+            std::thread m_thread;
+
+        };
+
+       /* {
+            Waiter waiter;
+            auto task = waiter.run(Task<>::Status::Successful, 123, std::chrono::seconds(3)).wait();
+            EXPECT_EQ(task.status(), Task<int>::Status::Successful);
+            EXPECT_EQ(task(), 123);
+        }
+        {
+            Waiter waiter;
+
+            auto start = std::chrono::high_resolution_clock::now();
+            auto task = waiter.run(Task<>::Status::Failed, 404, std::chrono::seconds(3)).wait();
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed = end - start;
+
+            EXPECT_TRUE(elapsed.count() >= 3.0f);
+            EXPECT_TRUE(elapsed.count() < 10.0f);
+            EXPECT_EQ(task.status(), Task<int>::Status::Failed);
+            EXPECT_EQ(task(), 404);
+            
+        }*/
     }
 }

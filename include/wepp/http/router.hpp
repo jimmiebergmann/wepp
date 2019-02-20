@@ -125,18 +125,6 @@ namespace Wepp
         public:
 
             /**
-            * Structure describing tag information.
-            *
-            */
-            struct Tag
-            {
-                Tag(const std::string & key, const std::string & regex);
-
-                std::string key;
-                std::string regex;
-            };
-
-            /**
             * Destructor.
             *
             */
