@@ -113,12 +113,26 @@ TEST(Task, Wait)
         {
             auto task = func(Task<>::Status::Successful, 123).wait();
             EXPECT_EQ(task.status(), Task<int>::Status::Successful);
+            EXPECT_TRUE(task.successful());
+            EXPECT_FALSE(task.failed());
+            EXPECT_FALSE(task.pending());
             EXPECT_EQ(task(), 123);
         }
         {
             auto task = func(Task<>::Status::Failed, 404).wait();
             EXPECT_EQ(task.status(), Task<int>::Status::Failed);
+            EXPECT_FALSE(task.successful());
+            EXPECT_TRUE(task.failed());
+            EXPECT_FALSE(task.pending());
             EXPECT_EQ(task(), 404);
+        }
+        {
+            auto task = func(Task<>::Status::Pending, 678);
+            EXPECT_EQ(task.status(), Task<int>::Status::Pending);
+            EXPECT_FALSE(task.successful());
+            EXPECT_FALSE(task.failed());
+            EXPECT_TRUE(task.pending());
+            EXPECT_EQ(task(), 678);
         }
     }
     {
@@ -147,8 +161,7 @@ TEST(Task, Wait)
                     switch (status)
                     {
                     case Task<>::Status::Successful: task.finish(); break;
-                    case Task<>::Status::Failed: task.fail(); break;
-                    default: break;
+                    default: task.fail(); break;
                     }
                 });
 
@@ -161,11 +174,27 @@ TEST(Task, Wait)
 
         };
 
-       /* {
+        {
             Waiter waiter;
             auto task = waiter.run(Task<>::Status::Successful, 123, std::chrono::seconds(3)).wait();
             EXPECT_EQ(task.status(), Task<int>::Status::Successful);
             EXPECT_EQ(task(), 123);
+        }
+        {
+            Waiter waiter;
+            auto task = waiter.run(Task<>::Status::Failed, 456, std::chrono::seconds(3));
+            EXPECT_EQ(task.status(), Task<int>::Status::Pending);
+            EXPECT_FALSE(task.successful());
+            EXPECT_FALSE(task.failed());
+            EXPECT_TRUE(task.pending());
+
+            task.wait();
+
+            EXPECT_EQ(task.status(), Task<int>::Status::Failed);
+            EXPECT_FALSE(task.successful());
+            EXPECT_TRUE(task.failed());
+            EXPECT_FALSE(task.pending());
+            EXPECT_EQ(task(), 456);
         }
         {
             Waiter waiter;
@@ -179,7 +208,36 @@ TEST(Task, Wait)
             EXPECT_TRUE(elapsed.count() < 10.0f);
             EXPECT_EQ(task.status(), Task<int>::Status::Failed);
             EXPECT_EQ(task(), 404);
-            
-        }*/
+
+        }
+        {
+            Waiter waiter;
+
+            auto start = std::chrono::high_resolution_clock::now();
+            auto task = waiter.run(Task<>::Status::Failed, 404, std::chrono::seconds(2)).wait(std::chrono::duration<double>(3));
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed = end - start;
+
+            EXPECT_TRUE(elapsed.count() >= 2.0f);
+            EXPECT_TRUE(elapsed.count() < 5.0f);
+            EXPECT_FALSE(task.timeout());
+            EXPECT_EQ(task.status(), Task<int>::Status::Failed);
+            EXPECT_EQ(task(), 404);
+        }
+        {
+            Waiter waiter;
+
+            auto start = std::chrono::high_resolution_clock::now();
+            auto task = waiter.run(Task<>::Status::Failed, 404, std::chrono::seconds(3)).wait(std::chrono::duration<double>(2));
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed = end - start;
+
+            EXPECT_TRUE(elapsed.count() >= 2.0f);
+            EXPECT_TRUE(elapsed.count() < 5.0f);
+            EXPECT_TRUE(task.timeout());
+            EXPECT_EQ(task.status(), Task<int>::Status::Pending);
+            EXPECT_EQ(task(), 404);
+        }
+
     }
 }

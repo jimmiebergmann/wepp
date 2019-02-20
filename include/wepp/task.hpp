@@ -30,6 +30,8 @@
 #include <memory>
 #include <chrono>
 #include <mutex>
+#include <condition_variable>
+#include <atomic>
 
 /**
 * Wepp namespace.
@@ -125,16 +127,25 @@ namespace Wepp
         }
 
         /**
-        * Check if the current status is set to Status::Successful.
+        * Check if task is pending.
+        *
+        */
+        bool pending() const
+        {
+            return m_members->m_status == Status::Pending;
+        }
+
+        /**
+        * Check if task is successful.
         *
         */
         bool successful() const
         {
-            return m_members->m_status == Status::successful;
+            return m_members->m_status == Status::Successful;
         }
 
         /**
-        * Check if the current status is set to Status::Failed.
+        * Check if task failed.
         *
         */
         bool failed() const
@@ -146,7 +157,7 @@ namespace Wepp
         * Check if task timed out during the last wait(...) call.
         *
         */
-        const Status timeout() const
+        const bool timeout() const
         {
             return m_members->m_timeout;
         }
@@ -164,7 +175,13 @@ namespace Wepp
         */
         Task<Return> & wait()
         {
+            std::unique_lock<std::mutex> lock(m_members->m_mutex);
             
+            if (m_members->m_status == Status::Pending)
+            {
+                m_members->m_condition.wait(lock);
+            }
+
             return *this;
         }
 
@@ -185,9 +202,12 @@ namespace Wepp
         */
         Task<Return> & wait(const std::chrono::duration<double> timeout)
         {
-            /*using namespace std::chrono_literals;
-            auto day = 24h;
-            auto halfhour = 0.0s;*/
+            std::unique_lock<std::mutex> lock(m_members->m_mutex);
+
+            if (m_members->m_status == Status::Pending)
+            {
+                m_members->m_timeout = m_members->m_condition.wait_for(lock, timeout) == std::cv_status::timeout;
+            }
 
             return *this;
         }
@@ -222,9 +242,11 @@ namespace Wepp
                 m_timeout(false)
             {}
 
-            Status m_status; /**< Status of task. */
-            Return m_value;  /**< Return value of task. */
-            bool m_timeout;  /**< Flag indicating if wait() timed out.*/
+            std::atomic<Status> m_status;                        /**< Status of task. */
+            Return m_value;                         /**< Return value of task. */
+            std::atomic_bool m_timeout;                         /**< Flag indicating if wait() timed out.*/
+            std::mutex m_mutex;
+            std::condition_variable m_condition;
         };
 
         std::shared_ptr<Members> m_members; /**< Shared data members of task. */
@@ -275,7 +297,9 @@ namespace Wepp
         */
         void fail()
         {
+            std::unique_lock<std::mutex> lock(this->m_members->m_mutex);
             this->m_members->m_status = Task<Return>::Status::Failed;
+            this->m_members->m_condition.notify_all();
         }
 
         /**
@@ -285,7 +309,9 @@ namespace Wepp
         */
         void finish()
         {
+            std::unique_lock<std::mutex> lock(this->m_members->m_mutex);
             this->m_members->m_status = Task<Return>::Status::Successful;
+            this->m_members->m_condition.notify_all();
         }
 
     };
