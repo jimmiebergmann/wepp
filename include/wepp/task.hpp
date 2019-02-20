@@ -177,7 +177,7 @@ namespace Wepp
         {
             std::unique_lock<std::mutex> lock(m_members->m_mutex);
             
-            if (m_members->m_status == Status::Pending)
+            while (m_members->m_status == Status::Pending)
             {
                 m_members->m_condition.wait(lock);
             }
@@ -203,10 +203,17 @@ namespace Wepp
         Task<Return> & wait(const std::chrono::duration<double> timeout)
         {
             std::unique_lock<std::mutex> lock(m_members->m_mutex);
+            
+            m_members->m_timeout = false;
+            const auto now = std::chrono::system_clock::now();
 
-            if (m_members->m_status == Status::Pending)
+            while (m_members->m_status == Status::Pending)
             {
-                m_members->m_timeout = m_members->m_condition.wait_for(lock, timeout) == std::cv_status::timeout;
+                if (m_members->m_condition.wait_until(lock, now + timeout) == std::cv_status::timeout)
+                {
+                    m_members->m_timeout = true;
+                    break;
+                }
             }
 
             return *this;

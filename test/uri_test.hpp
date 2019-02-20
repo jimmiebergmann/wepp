@@ -28,22 +28,22 @@ TEST(Uri, Clear)
 {
     Uri uri;
 
-    EXPECT_FALSE(uri.schema.size());
-    EXPECT_FALSE(uri.authority.size());
-    EXPECT_FALSE(uri.path.size());
-    EXPECT_FALSE(uri.query.size());
-    EXPECT_FALSE(uri.fragment.size());
-    EXPECT_TRUE(uri.isEmpty());
+    EXPECT_EQ(uri.schema.size(), 0);
+    EXPECT_EQ(uri.authority.size(), 0);
+    EXPECT_EQ(uri.path.size(), 0);
+    EXPECT_EQ(uri.query.size(), 0);
+    EXPECT_EQ(uri.fragment.size(), 0);
+    EXPECT_TRUE(uri.isEmpty()), 0;
 
     uri.schema = uri.authority = uri.path = uri.query = uri.fragment = "foobar";
     EXPECT_FALSE(uri.isEmpty());
 
     uri.clear();
-    EXPECT_FALSE(uri.schema.size());
-    EXPECT_FALSE(uri.authority.size());
-    EXPECT_FALSE(uri.path.size());
-    EXPECT_FALSE(uri.query.size());
-    EXPECT_FALSE(uri.fragment.size());
+    EXPECT_EQ(uri.schema.size(), 0);
+    EXPECT_EQ(uri.authority.size(), 0);
+    EXPECT_EQ(uri.path.size(), 0);
+    EXPECT_EQ(uri.query.size(), 0);
+    EXPECT_EQ(uri.fragment.size(), 0);
     EXPECT_TRUE(uri.isEmpty());
 }
 
@@ -52,41 +52,41 @@ TEST(Uri, Parse)
     Uri uri;
     // foo://example.com:8042/over/there?name=ferret#nose
     EXPECT_TRUE(uri.parse(test_str[0]));
-    EXPECT_TRUE(uri.schema == "foo");
-    EXPECT_TRUE(uri.authority == "example.com:8042");
-    EXPECT_TRUE(uri.path == "/over/there");
-    EXPECT_TRUE(uri.query == "name=ferret");
-    EXPECT_TRUE(uri.fragment == "nose");
+    EXPECT_STREQ(uri.schema.c_str(), "foo");
+    EXPECT_STREQ(uri.authority.c_str(), "example.com:8042");
+    EXPECT_STREQ(uri.path.c_str(), "/over/there");
+    EXPECT_STREQ(uri.query.c_str(), "name=ferret");
+    EXPECT_STREQ(uri.fragment.c_str(), "nose");
 
     // urn:example:animal:ferret:nose
     EXPECT_TRUE(uri.parse(test_str[1]));
-    EXPECT_TRUE(uri.schema == "urn");
-    EXPECT_TRUE(uri.authority == "");
-    EXPECT_TRUE(uri.path == "example:animal:ferret:nose");
-    EXPECT_TRUE(uri.query == "");
-    EXPECT_TRUE(uri.fragment == "");
+    EXPECT_STREQ(uri.schema.c_str(), "urn");
+    EXPECT_STREQ(uri.authority.c_str(), "");
+    EXPECT_STREQ(uri.path.c_str(), "example:animal:ferret:nose");
+    EXPECT_STREQ(uri.query.c_str(), "");
+    EXPECT_STREQ(uri.fragment.c_str(), "");
 
     // https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
     EXPECT_TRUE(uri.parse(test_str[2]));
-    EXPECT_TRUE(uri.schema == "https");
-    EXPECT_TRUE(uri.authority == "john.doe@www.example.com:123");
-    EXPECT_TRUE(uri.path == "/forum/questions/");
-    EXPECT_TRUE(uri.query == "tag=networking&order=newest");
-    EXPECT_TRUE(uri.fragment == "top");
+    EXPECT_STREQ(uri.schema.c_str(), "https");
+    EXPECT_STREQ(uri.authority.c_str(), "john.doe@www.example.com:123");
+    EXPECT_STREQ(uri.path.c_str(), "/forum/questions/");
+    EXPECT_STREQ(uri.query.c_str(), "tag=networking&order=newest");
+    EXPECT_STREQ(uri.fragment.c_str(), "top");
 
     // mailto:John.Doe@example.com
     EXPECT_TRUE(uri.parse(test_str[3]));
-    EXPECT_TRUE(uri.schema == "mailto");
-    EXPECT_TRUE(uri.authority == "");
-    EXPECT_TRUE(uri.path == "John.Doe@example.com");
-    EXPECT_TRUE(uri.query == "");
-    EXPECT_TRUE(uri.fragment == "");
+    EXPECT_STREQ(uri.schema.c_str(), "mailto");
+    EXPECT_STREQ(uri.authority.c_str(), "");
+    EXPECT_STREQ(uri.path.c_str(), "John.Doe@example.com");
+    EXPECT_STREQ(uri.query.c_str(), "");
+    EXPECT_STREQ(uri.fragment.c_str(), "");
 
     // "http:this:is@not.the_authority/this/is/the/path?tag=networking&order=newest#top"
     EXPECT_TRUE(uri.parse(test_str[4]));
-    EXPECT_TRUE(uri.schema == "http");
-    EXPECT_TRUE(uri.authority == "");
-    EXPECT_TRUE(uri.path == "this:is@not.the_authority/this/is/the/path");
-    EXPECT_TRUE(uri.query == "tag=networking&order=newest");
-    EXPECT_TRUE(uri.fragment == "top");
+    EXPECT_STREQ(uri.schema.c_str(), "http");
+    EXPECT_STREQ(uri.authority.c_str(), "");
+    EXPECT_STREQ(uri.path.c_str(), "this:is@not.the_authority/this/is/the/path");
+    EXPECT_STREQ(uri.query.c_str(), "tag=networking&order=newest");
+    EXPECT_STREQ(uri.fragment.c_str(), "top");
 }
