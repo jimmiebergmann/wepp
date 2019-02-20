@@ -22,4 +22,4 @@ build:
   verbosity: minimal
   
 after_build:
-    - bin\test.exe
+    - bin\wepp_test.exe

@@ -4,8 +4,7 @@
 A web microframework written in C++, providing a clean API for running REST servers/clients.
 
 ## Status
-This library is currently in startup phase and not yet providing any useful functionality.
-Follow for more updates.
+No useful functionality is yet available.
 
 ## Dependencies
 * C++11
@@ -15,11 +14,11 @@ Follow for more updates.
 ```sh
 $ mkdir build
 $ cd build
-$ cmake .
-$ cmake --build . --target complete --config debug
-or
-$ cmake --build . --target complete --config release
+$ cmake ..
+$ make
 ```
+##### Windows
+Open wepp.sln and compile in Visual Studio.
 
 ## Example
 Not yet.
