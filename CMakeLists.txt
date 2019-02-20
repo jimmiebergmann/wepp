@@ -3,7 +3,7 @@ function(createSourceGroups files rootPath)
 	foreach(_source IN ITEMS ${files} )
 		get_filename_component(_source_path "${_source}" PATH)
 		file(RELATIVE_PATH _source_path_rel "${rootPath}" "${_source_path}")
-		message("${_source_path} ${_source_path_rel} ${rootPath}")
+		#message("${_source_path} ${_source_path_rel} ${rootPath}")
 		string(REPLACE "/" "\\" _group_path "${_source_path_rel}")
 		source_group("${_group_path}" FILES "${_source}")
 	endforeach()
@@ -29,10 +29,13 @@ target_compile_definitions(wepp PRIVATE WEPP_EXPORTS)
 install(TARGETS wepp DESTINATION "${CMAKE_SOURCE_DIR}lib") # Install library
 set_target_properties( wepp
   PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
   ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/lib"
   ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/lib"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
   LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/lib"
   LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/lib"
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
   RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
 )
@@ -50,8 +53,10 @@ target_compile_definitions(wepp_static PRIVATE WEPP_STATIC)
 install(TARGETS wepp_static DESTINATION "${CMAKE_SOURCE_DIR}lib") # Install library
 set_target_properties( wepp_static
   PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
   ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/lib"
   ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/lib"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
   LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/lib"
   LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/lib"
 )
@@ -70,18 +75,23 @@ endif()
 
 include_directories ("${CMAKE_SOURCE_DIR}/include")
 link_directories("${CMAKE_SOURCE_DIR}/lib")
-add_executable(test ${test_files})
-set_target_properties( test
+add_executable(wepp_test ${test_files})
+set_target_properties( wepp_test
   PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
   RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
 )
-target_link_libraries(test gtest_main wepp)
+target_link_libraries(wepp_test gtest_main wepp)
 
+message("${CMAKE_SOURCE_DIR}")
+message("${CMAKE_SOURCE_DIR}")
+message("${CMAKE_SOURCE_DIR}")
+message("${CMAKE_SOURCE_DIR}")
 
 # Complete target, for building everything.
 add_custom_target(complete)
 add_dependencies(complete wepp)
 add_dependencies(complete wepp_static)
-add_dependencies(complete test)
+add_dependencies(complete wepp_test)
 
