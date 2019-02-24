@@ -26,9 +26,26 @@
 #ifndef WEPP_BUILD_HPP
 #define WEPP_BUILD_HPP
 
-// Platform
+// Platforms
+
+// Win32
 #if defined( _WIN32 ) || defined( __WIN32__ ) || defined( _WIN64 ) || defined( __WIN64__ )
     #define WEPP_PLATFORM_WINDOWS
+
+    #include <WinSock2.h>
+    #include <Windows.h>
+    
+    #ifdef max
+        #undef max
+    #endif
+    #ifdef min
+        #undef min
+    #endif
+    #if defined (_MSC_VER)
+        #pragma comment(lib, "ws2_32.lib")
+    #endif
+
+// Linux
 #elif defined( linux ) || defined( __linux )
     #define WEPP_PLATFORM_LINUX
 #else

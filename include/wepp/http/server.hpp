@@ -27,8 +27,13 @@
 #define WEPP_HTTP_SERVER_HPP
 
 #include "wepp/build.hpp"
+#include "wepp/http/router.hpp"
 #include "wepp/task.hpp"
+#include "wepp/threadPool.hpp"
+#include "wepp/socket/tcpListener.hpp"
 #include <thread>
+#include <mutex>
+#include <queue>
 
 /**
 * Wepp namespace.
@@ -65,16 +70,49 @@ namespace Wepp
             *
             */
             ~Server();
-            
+
+            /**
+            * Deleted copy constructor.
+            *
+            */
+            Server(const Server &) = delete;
+
             /**
             * Asynchronous function for starting the server.
             *
             */
             Task<> start();
 
+            /**
+            * Asynchronous function for stopping the server.
+            *
+            */
+            Task<> stop();
+
+            /**
+            * Class containing all the routes.
+            * 
+            * @remark Do not change any routes when the server has been started via start().
+            *
+            */
+            Router route;
+
         private:
 
-            std::thread m_thread; /**< Main thread. */
+            /**
+            * Internal function for handling the stop tasks.
+            *
+            */
+            void handleStop();
+
+            std::thread m_thread;                       /**< Main thread. */
+            Socket::TcpListener m_listener;             /**< Tcp listener. */
+            std::atomic_bool m_running;                 /**< Flag, indicating if server is running.*/
+            std::atomic_bool m_stopped;                 /**< Flag, indicating if server has been stopped.*/
+            std::queue<TaskController<>> m_stopQueue;   /**< Queue of stop tasks..*/
+            std::mutex m_stopQueueMutex;                /**< Mutex for the stop queue..*/
+
+            ThreadPool<std::shared_ptr<Socket::TcpSocket>> m_recivePool;
 
         };
 

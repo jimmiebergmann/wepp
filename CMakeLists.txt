@@ -21,7 +21,9 @@ file(GLOB wepp_files ${wepp_src} ${wepp_inc})
 # Wepp
 include_directories ("${CMAKE_SOURCE_DIR}/include") # Include header files
 add_library(wepp SHARED ${wepp_files}) # Create shared library
-
+IF (WIN32)
+	target_link_libraries(wepp "ws2_32.lib")
+ENDIF()
 createSourceGroups("${wepp_src}" "${CMAKE_SOURCE_DIR}/source")
 createSourceGroups("${wepp_inc}" "${CMAKE_SOURCE_DIR}/include")
 
@@ -39,6 +41,7 @@ set_target_properties( wepp
   RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
 )
+
 install(FILES ${wepp_inc} DESTINATION "${CMAKE_SOURCE_DIR}/include") # Install library headers
 
 

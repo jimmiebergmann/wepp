@@ -25,7 +25,7 @@
 
 #include "wepp/http/server.hpp"
 #include <chrono>
-
+#include <iostream>
 
 namespace Wepp
 {
@@ -38,11 +38,14 @@ namespace Wepp
             int wat = 5;
         }
 
-        Server::Server()
+        Server::Server() :
+            m_running(false),
+            m_stopped(true)
         { }
 
         Server::~Server()
         {
+            stop().wait();
             if (m_thread.joinable())
             {
                 m_thread.join();
@@ -51,18 +54,114 @@ namespace Wepp
 
         Task<> Server::start()
         {
+            std::lock_guard<std::mutex> lock(m_stopQueueMutex);
+
             TaskController<> task(false);
 
-            m_thread = std::thread([task]() mutable
+            if (m_running)
             {
-                //std::this_thread::sleep_for(std::chrono::seconds(3));
+                return task.finish();
+            }
+            if (!m_stopped)
+            {
+                return task.fail();
+            }
+            m_stopped = false;
+            
+            // Start main thread.
+            m_thread = std::thread([this, task]() mutable
+            {
+                // Start recieve pool.
+                m_recivePool.start(10, 100, [](std::shared_ptr<Socket::TcpSocket> socket)
+                {
+                    //std::cout << "Receiving data from peer..." << std::endl;
 
-                task() = true;
+                    const size_t bufferSize = 1024;
+                    char buffer[bufferSize + 1];
+
+                    int size = socket->receive(buffer, bufferSize);
+                    if (size < 0)
+                    {
+                        std::cout << "Native error: " << Socket::TcpSocket::getLastError() << std::endl;
+                    }
+                    else if (size >= 0)
+                    {
+                        buffer[size] = 0;
+                        std::cout << buffer << std::endl;
+                    }
+
+                });
+
+                // Start listener.
+                if (!m_listener.start("127.0.0.1", 80).wait().successful())
+                {
+                    m_stopped = true;
+                    task.fail();
+                    return;
+                }
+  
+                // Set task as finished.
+                m_running = true;
+                m_stopped = false;
                 task.finish();
+
+                // Listen loop.
+                while (m_running)
+                {
+                    auto connection = m_listener.listen().wait(std::chrono::seconds(1));
+
+                    if (!m_running)
+                    {
+                        break;
+                    }
+
+                    if (connection.successful())
+                    {
+                        if (!m_recivePool.work(connection()))
+                        {
+                            throw std::runtime_error("Failed to start work.");
+                        }
+                    }
+                }
+
+                handleStop();
+                
             });
            
 
             return task;
+        }
+
+        Task<> Server::stop()
+        {
+            std::lock_guard<std::mutex> lock(m_stopQueueMutex);
+
+            TaskController<> task;
+
+            if (m_stopped)
+            {
+                return task.finish();
+            }
+
+            m_stopQueue.push(task);
+
+            m_running = false;
+            return task;
+        }
+
+        void Server::handleStop()
+        {
+            std::lock_guard<std::mutex> lock(m_stopQueueMutex);
+
+            while (m_stopQueue.size())
+            {
+                m_stopQueue.front().finish();
+                m_stopQueue.pop();
+            }
+
+            m_recivePool.stop();
+
+            m_stopped = true;
         }
 
     }

@@ -43,6 +43,18 @@ namespace Wepp
     template<typename Return> class TaskController;
 
     /**
+    * Enumerator of status codes of task.
+    *
+    */
+    enum class TaskStatus
+    {
+        Pending,        /**< The task is not yet finished. */
+        Successful,     /**< The task is finished and succeded. */
+        Failed,         /**< The task failed. */
+    };
+
+
+    /**
     * Task class.
     *
     *
@@ -54,23 +66,10 @@ namespace Wepp
     public:
 
         /**
-        * Enumerator of status codes of task.
-        *
-        */
-        enum class Status
-        {
-            Pending,        /**< The task is not yet finished. */
-            Successful,     /**< The task is finished and succeded. */
-            Failed,         /**< The task failed. */
-        };
-
-        /**
         * Constuctor.
         *
         */
-        Task() :
-            m_members(std::make_shared<Members>())
-        { }
+        Task();
 
         /**
         * Constuctor.
@@ -79,88 +78,61 @@ namespace Wepp
         *
         */
         template<typename ... Args>
-        Task(Args ... args) :
-            m_members(std::make_shared<Members>(args...))
-        { }
-
+        Task(Args ... args);
 
         /**
         * Casting task controller to task.
         *
         */
-        Task(const TaskController<Return> & taskController) :
-            m_members(taskController.m_members)
-        { }
+        Task(const TaskController<Return> & taskController);
 
         /**
         * Destructor.
         *
         */
-        virtual ~Task()
-        { }
+        virtual ~Task();
 
         /**
         * Value access operator.
         *
         */
-        Return & operator()()
-        {
-            return m_members->m_value;
-        }
+        Return & operator()();
 
         /**
         * Constant value access operator.
         *
         */
-        const Return & operator()() const
-        {
-            return m_members->m_value;
-        }
+        const Return & operator()() const;
 
         /**
         * Gets current status.
         *
         */
-        const Status status() const
-        {
-            return m_members->m_status;
-        }
+        const TaskStatus status() const;
 
         /**
         * Check if task is pending.
         *
         */
-        bool pending() const
-        {
-            return m_members->m_status == Status::Pending;
-        }
+        bool pending() const;
 
         /**
         * Check if task is successful.
         *
         */
-        bool successful() const
-        {
-            return m_members->m_status == Status::Successful;
-        }
+        bool successful() const;
 
         /**
         * Check if task failed.
         *
         */
-        bool failed() const
-        {
-            return m_members->m_status == Status::Failed;
-        }
+        bool failed() const;
 
         /**
         * Check if task timed out during the last wait(...) call.
         *
         */
-        const bool timeout() const
-        {
-            return m_members->m_timeout;
-        }
+        const bool timeout() const;
 
         /**
         * Wait until the task succeed or fail.
@@ -173,17 +145,7 @@ namespace Wepp
         * @see status()
         *
         */
-        Task<Return> & wait()
-        {
-            std::unique_lock<std::mutex> lock(m_members->m_mutex);
-            
-            while (m_members->m_status == Status::Pending)
-            {
-                m_members->m_condition.wait(lock);
-            }
-
-            return *this;
-        }
+        Task<Return> & wait();
 
         /**
         * Wait until the task is complete.
@@ -200,24 +162,19 @@ namespace Wepp
         * @see timeout()
         *
         */
-        Task<Return> & wait(const std::chrono::duration<double> timeout)
-        {
-            std::unique_lock<std::mutex> lock(m_members->m_mutex);
-            
-            m_members->m_timeout = false;
-            const auto now = std::chrono::system_clock::now();
+        Task<Return> & wait(const std::chrono::duration<double> timeout);
 
-            while (m_members->m_status == Status::Pending)
-            {
-                if (m_members->m_condition.wait_until(lock, now + timeout) == std::cv_status::timeout)
-                {
-                    m_members->m_timeout = true;
-                    break;
-                }
-            }
+        /**
+        * Equal to Status comparison.
+        *
+        */
+        bool operator ==(const TaskStatus & status) const;
 
-            return *this;
-        }
+        /**
+        * Not equal to Status comparison.
+        *
+        */
+        bool operator !=(const TaskStatus & status) const;
 
     protected:
 
@@ -233,23 +190,16 @@ namespace Wepp
             * Constructor.
             *
             */
-            Members() :
-                m_status(Status::Pending),
-                m_timeout(false)
-            {}
+            Members();
 
             /**
             * Constructor, with parameters for return value.
             *
             */
             template<typename ... Args>
-            Members(Args ... args) :
-                m_status(Status::Pending),
-                m_value(args...),
-                m_timeout(false)
-            {}
+            Members(Args ... args);
 
-            std::atomic<Status> m_status;                        /**< Status of task. */
+            std::atomic<TaskStatus> m_status;                        /**< Status of task. */
             Return m_value;                         /**< Return value of task. */
             std::atomic_bool m_timeout;                         /**< Flag indicating if wait() timed out.*/
             std::mutex m_mutex;
@@ -275,9 +225,7 @@ namespace Wepp
         * Constuctor.
         *
         */
-        TaskController() :
-            Task<Return>()
-        { }
+        TaskController();
 
         /**
         * Constuctor.
@@ -286,40 +234,31 @@ namespace Wepp
         *
         */
         template<typename ... Args>
-        TaskController(Args ... args) :
-            Task<Return>(args...)
-        { }
+        TaskController(Args ... args);
 
         /**
         * Destructor.
         *
         */
-        ~TaskController()
-        { }
+        ~TaskController();
 
         /**
         * Mark the task as failed.
         * All wait() operators are terminated.
         *
+        * @return Reference to task.
+        *
         */
-        void fail()
-        {
-            std::unique_lock<std::mutex> lock(this->m_members->m_mutex);
-            this->m_members->m_status = Task<Return>::Status::Failed;
-            this->m_members->m_condition.notify_all();
-        }
+        TaskController & fail();
 
         /**
         * Mark the task as successful.
         * All wait() operators are terminated.
         *
+        * @return Reference to task.
+        *
         */
-        void finish()
-        {
-            std::unique_lock<std::mutex> lock(this->m_members->m_mutex);
-            this->m_members->m_status = Task<Return>::Status::Successful;
-            this->m_members->m_condition.notify_all();
-        }
+        TaskController & finish();
 
     };
 

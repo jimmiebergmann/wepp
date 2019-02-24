@@ -1,7 +1,8 @@
 #include "gtest/gtest.h"
 #include "wepp/http/server.hpp"
+#include "wepp/semaphore.hpp"
 #include <iostream>
-#include <future>
+
 using namespace Wepp;
 
 TEST(Server, Start)
@@ -15,3 +16,35 @@ TEST(Server, Start)
 
     EXPECT_TRUE(true);
 }
+/*
+TEST(Server, Route)
+{
+    {
+        Http::Server server;
+        Semaphore sem1, sem2;
+
+        server.route["GET"]["/work/employe/<[\\w ]*>"] = [&sem1](const Http::Request & request, Http::Response & response)
+        {
+            std::cout << "Requesting employe!" << std::endl;
+            sem1.notifyAll();
+        };
+
+        server.route["GET"]["/work/task/<[0-9]*>"] = [&sem2](const Http::Request & request, Http::Response & response)
+        {
+            std::cout << "Requesting task!" << std::endl;
+            sem2.notifyAll();
+        };
+
+        EXPECT_TRUE(server.start().wait() == TaskStatus::Successful);
+
+        //std::this_thread::sleep_for(std::chrono::duration<double>(1));
+        //server.stop().wait();
+
+        sem1.wait();
+        sem2.wait();
+
+    }
+
+
+    EXPECT_TRUE(true);
+}*/
