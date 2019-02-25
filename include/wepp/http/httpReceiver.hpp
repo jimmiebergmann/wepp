@@ -23,11 +23,15 @@
 *
 */
 
-#ifndef WEPP_HTTP_RESPONSE_HPP
-#define WEPP_HTTP_RESPONSE_HPP
+#ifndef WEPP_HTTP_HTTP_RECEIVER_HPP
+#define WEPP_HTTP_HTTP_RECEIVER_HPP
 
 #include "wepp/build.hpp"
-#include "wepp/http/status.hpp"
+#include "wepp/http/request.hpp"
+#include "wepp/http/response.hpp"
+#include "wepp/socket/tcpSocket.hpp"
+#include <memory>
+#include <functional>
 
 /**
 * Wepp namespace.
@@ -44,10 +48,10 @@ namespace Wepp
     {
 
         /**
-        * Http response class.
+        * Http receiver class.
         *
         */
-        class WEPP_API Response
+        class HttpReceiver
         {
 
         public:
@@ -56,23 +60,23 @@ namespace Wepp
             * Default constructor.
             *
             */
-            Response();
+            HttpReceiver(const std::shared_ptr<Socket::TcpSocket> socket, Request & request, Response & response, const size_t bufferSize);
 
             /**
-            * Get status.
+            * Receive and parse data.
+            *
+            * @param[in] onRequest - Function executed when the request line has been received. The receiver is cancelled if the function returns false.
+            * @param[in] onHeaders - Function executed when all headers are received. The receiver is cancelled if the function returns false.
             *
             */
-            Status status() const;
-
-            /**
-            * Set status.
-            *
-            */
-            Response & status(const Status status);
+            bool receive(std::function<bool(Request &, Response &)> onRequest, std::function<bool(Request &, Response &)> onHeaders);
 
         private:
 
-            Status m_status;
+            std::shared_ptr<Socket::TcpSocket> m_socket;     /**< Socket, receiving data from.*/
+            Request & m_request;                             /**< Reference to request.*/
+            Response & m_response;                           /**< Reference to response.*/
+            const size_t m_bufferSize;                       /**< Size of buffers.*/
 
         };
 

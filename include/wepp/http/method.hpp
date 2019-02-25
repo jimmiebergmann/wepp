@@ -78,6 +78,6 @@ namespace Wepp
 /**
 * @file
 *
-* This header file define the interfaces of http methods
+* This header file define the interfaces of http methods.
 *
 */

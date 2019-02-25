@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef WEPP_HTTP_REQUEST_HPP
-#define WEPP_HTTP_REQUEST_HPP
+#ifndef WEPP_HTTP_BODY_HPP
+#define WEPP_HTTP_BODY_HPP
 
 #include "wepp/build.hpp"
-#include "wepp/http/body.hpp"
 #include <string>
-#include <map>
+#include <vector>
+#include <algorithm>
 
 /**
 * Wepp namespace.
@@ -46,83 +46,84 @@ namespace Wepp
     {
 
         /**
-        * Http request class.
+        * Http body class.
+        *
+        * The data is internally stored in a std::vector.
         *
         */
-        class WEPP_API Request
+        class Body
         {
 
         public:
 
             /**
-            * Header map type.
-            *
-            */
-            typedef std::map<std::string, std::string> HeaderMap;
-
-            /**
             * Default constructor.
             *
             */
-            Request();
-
-            const std::string & method() const;
-
-            /**
-            * Get resouce.
-            *
-            */
-            const std::string & resource() const;
+            Body()
+            { }
 
             /**
-            * Get version.
+            * Gets data of body.
             *
             */
-            const std::string & version() const;
+            char * data()
+            {
+                return &m_data[0];
+            }
 
             /**
-            * Get headers.
+            * Gets const data of body.
             *
             */
-            HeaderMap & headers();
+            const char * data() const
+            {
+                return &m_data[0];
+            }
 
             /**
-            * Get const headers.
+            * Gets size of body.
             *
             */
-            const HeaderMap & headers() const;
+            size_t size() const
+            {
+                return m_data.size();
+            }
 
             /**
-            * Get body.
+            * Assigning operator.
             *
             */
-            const Body & body() const;
+            Body & operator =(const std::string & string)
+            {
+                m_data.assign(string.begin(), string.end());
+                return *this;
+            }
 
             /**
-            * Get const body.
+            * Incremental assignment operator.
             *
             */
-            Body & body();
+            Body & operator +=(const std::string & string)
+            {
+                std::copy(string.begin(), string.end(), std::back_inserter<std::vector<char>>(m_data));
+                return *this;
+            }
 
             /**
-            * Set method.
+            * Input steaming operator.
             *
             */
-            Request & method(const std::string & method);
-
-            /**
-            * Set resource.
-            *
-            */
-            Request & resource(const std::string & resource);
+            Body & operator <<(const std::string & string)
+            {
+                std::copy(string.begin(), string.end(), std::back_inserter<std::vector<char>>(m_data));
+                return *this;
+            }
 
         private:
 
-            std::string m_resource;     /**< Request URI/resource. */
-            std::string m_version;      /**< Version of HTTP protocol. */
-            std::string m_method;       /**< Request method. */
-            HeaderMap m_headers;        /**< Headers map. */
-            Body m_body;                /**< Request body. */
+            std::vector<char> m_data;     /**< Unique pointer for data.*/
+            //std::mutex m_mutex;           /**< Mutex protecting the data.*/
 
         };
 

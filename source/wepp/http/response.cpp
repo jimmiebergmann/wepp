@@ -31,8 +31,20 @@ namespace Wepp
     namespace Http
     {
 
-        Response::Response()
+        Response::Response() :
+            m_status(Status::Ok)
         { }
+
+        Status Response::status() const
+        {
+            return m_status;
+        }
+
+        Response & Response::status(const Status status)
+        {
+            m_status = status;
+            return *this;
+        }
 
     }
 

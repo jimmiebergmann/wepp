@@ -24,6 +24,7 @@
 */
 
 #include "wepp/http/server.hpp"
+#include "wepp/http/httpReceiver.hpp"
 #include <chrono>
 #include <iostream>
 
@@ -68,29 +69,52 @@ namespace Wepp
             // Start main thread.
             m_thread = std::thread([this, task]() mutable
             {
+                const size_t poolMin = 10;
+                const size_t poolMax = 100;
+
                 // Start recieve pool.
                 m_recivePool.start([this](std::shared_ptr<Socket::TcpSocket> socket)
                 {
-                    //std::cout << "Receiving data from peer..." << std::endl;
+                    Router::CallbackFunc callbackFunction = nullptr;
 
-                    const size_t bufferSize = 1024;
-                    char buffer[bufferSize + 1];
+                    Request request;
+                    Response response;
+                    HttpReceiver httpReceiver(socket, request, response, 8192);
 
-                    int size = socket->receive(buffer, bufferSize);
-                    if (size < 0)
+                    bool status = httpReceiver.receive(
+                        // On request.
+                        [this, &callbackFunction](Request & request, Response & response) mutable -> bool
+                        {
+                            std::vector<std::string> matches;
+                            callbackFunction = route.find(request.method(), request.resource(), matches);
+                            if (callbackFunction == nullptr)
+                            {
+                                response.status(Status::NotFound);
+                                return false;
+                            }
+                            return true;
+                        },
+                        // On headers.
+                        [this](Request & request, Response & response) -> bool
+                        {
+
+                            return true;
+                        }
+                    );
+
+                    // Handle errors occured while receiving request.
+                    if (response.status() != Status::Ok)
                     {
-                        std::cout << "Native error: " << Socket::TcpSocket::getLastError() << std::endl;
+                        std::cout << "HTTP: " << (uint32_t)response.status() << ": " << request.resource() << std::endl;
                     }
-                    else if (size >= 0)
+                    
+                    // Execute callback.
+                    if (status && callbackFunction)
                     {
-                        buffer[size] = 0;
-                        static size_t counter = 0;
-                        counter++;
-                        std::cout << "Count: " << counter << std::endl;
-                        std::cout << buffer << std::endl;
+                        callbackFunction(request, response);
                     }
 
-                }, 10, 100).wait();
+                }, poolMin, poolMax).wait();
 
                 // Start listener.
                 if (!m_listener.start("127.0.0.1", 80).wait().successful())

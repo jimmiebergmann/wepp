@@ -31,8 +31,58 @@ namespace Wepp
     namespace Http
     {
 
-        Request::Request()
+        Request::Request() :
+            m_method(""),
+            m_resource(""),
+            m_version("HTTP/1.1")
         { }
+
+        const std::string & Request::method() const
+        {
+            return m_method;
+        }
+
+        const std::string & Request::resource() const
+        {
+            return m_resource;
+        }
+
+        const std::string & Request::version() const
+        {
+            return m_version;
+        }
+
+        Request::HeaderMap & Request::headers()
+        {
+            return m_headers;
+        }
+
+        const Request::HeaderMap & Request::headers() const
+        {
+            return m_headers;
+        }
+
+        const Body & Request::body() const
+        {
+            return m_body;
+        }
+
+        Body & Request::body()
+        {
+            return m_body;
+        }
+
+        Request & Request::method(const std::string & method)
+        {
+            m_method = method;
+            return *this;
+        }
+
+        Request & Request::resource(const std::string & resource)
+        {
+            m_resource = resource;
+            return *this;
+        }
 
     }
 

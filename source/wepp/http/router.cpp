@@ -35,6 +35,8 @@ namespace Wepp
     namespace Http
     {
 
+        static const Router::CallbackFunc s_defaultCallbackFunc = nullptr;
+
         // Route class.
         Router::Router()
         { }
@@ -71,6 +73,17 @@ namespace Wepp
             RouteMethod * routeMethod = new RouteMethod(methodName);
             auto result = m_methods.insert({ methodName, routeMethod });
             return *routeMethod;
+        }
+
+        const Router::CallbackFunc & Router::find(const std::string & method, const std::string & path, std::vector<std::string> & matches) const
+        {
+            auto it = m_methods.find(method);
+            if (it == m_methods.end())
+            {
+                return s_defaultCallbackFunc;
+            }
+
+            return it->second->find(path, matches);
         }
 
 
@@ -176,8 +189,6 @@ namespace Wepp
 
         const Router::CallbackFunc & RouteMethod::find(const std::string & path, std::vector<std::string> & matches) const
         {
-            static const Router::CallbackFunc s_defaultCallbackFunc = nullptr;
-
             matches.clear();
 
             std::vector<std::string> dirs;

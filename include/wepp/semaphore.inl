@@ -59,12 +59,12 @@ namespace Wepp
         return false;
     }
 
-    inline void Semaphore::notifyAll()
+   /* inline void Semaphore::notifyAll()
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_value = 0;
         m_condition.notify_all();
-    }
+    }*/
 
     inline void Semaphore::notifyOne()
     {

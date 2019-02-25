@@ -102,6 +102,18 @@ namespace Wepp
             */
             RouteMethod & operator[](const std::string & method);
 
+            /**
+            * Find callback function by method and path.
+            *
+            * @param[in] method - Method to find in route tree.
+            * @param[in] path - Path to find in route tree.
+            * @param[out] tags - Vector of matching tags.
+            *
+            * @return Found function.
+            *
+            */
+            const Router::CallbackFunc & find(const std::string & method, const std::string & path, std::vector<std::string> & matches) const;
+
         private:
             
             /**

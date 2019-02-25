@@ -51,7 +51,7 @@ namespace Wepp
 
         void wait();
         bool tryWait();
-        void notifyAll();
+        //void notifyAll();
         void notifyOne();
 
     private:

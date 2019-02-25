@@ -5,7 +5,7 @@
 
 using namespace Wepp;
 
-TEST(Server, Start)
+/*TEST(Server, Start)
 {
     {
         Http::Server server;
@@ -15,9 +15,9 @@ TEST(Server, Start)
 
 
     EXPECT_TRUE(true);
-}
+}*/
 
-/*TEST(Server, Route)
+TEST(Server, Route)
 {
     {
         Http::Server server;
@@ -26,13 +26,13 @@ TEST(Server, Start)
         server.route["GET"]["/work/employe/<[\\w ]*>"] = [&sem1](const Http::Request & request, Http::Response & response)
         {
             std::cout << "Requesting employe!" << std::endl;
-            sem1.notifyAll();
+            sem1.notifyOne();
         };
 
-        server.route["GET"]["/work/task/<[0-9]*>"] = [&sem2](const Http::Request & request, Http::Response & response)
+        server.route["GET"]["/work/task/<[0-9]+>"] = [&sem2](const Http::Request & request, Http::Response & response)
         {
             std::cout << "Requesting task!" << std::endl;
-            sem2.notifyAll();
+            sem2.notifyOne();
         };
 
         EXPECT_TRUE(server.start().wait() == TaskStatus::Successful);
@@ -44,4 +44,4 @@ TEST(Server, Start)
 
 
     EXPECT_TRUE(true);
-}*/
+}
