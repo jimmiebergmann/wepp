@@ -107,10 +107,10 @@ namespace Wepp
 
             std::thread m_thread;                       /**< Main thread. */
             Socket::TcpListener m_listener;             /**< Tcp listener. */
-            std::atomic_bool m_running;                 /**< Flag, indicating if server is running.*/
-            std::atomic_bool m_stopped;                 /**< Flag, indicating if server has been stopped.*/
-            std::queue<TaskController<>> m_stopQueue;   /**< Queue of stop tasks..*/
-            std::mutex m_stopQueueMutex;                /**< Mutex for the stop queue..*/
+            std::atomic_bool m_running;                 /**< Flag, indicating if server is running. */
+            std::atomic_bool m_stopped;                 /**< Flag, indicating if server has been stopped. */
+            TaskController<> m_stopTask;                /**< Task for stopping the server. */
+            std::mutex m_stopQueueMutex;                /**< Mutex for the stop queue. */
 
             ThreadPool<std::shared_ptr<Socket::TcpSocket>> m_recivePool;
 

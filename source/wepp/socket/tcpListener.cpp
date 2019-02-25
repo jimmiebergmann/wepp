@@ -38,8 +38,7 @@ namespace Wepp
 
         TcpListener::~TcpListener()
         {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_running = false;
+            stop().wait();
             if (m_listenThread.joinable())
             {
                 m_listenThread.join();
@@ -56,6 +55,8 @@ namespace Wepp
             {
                 return task.fail();
             }
+
+            m_stopTask = TaskController<>();
 
             m_running = true;
             m_listenThread = std::thread([this, task, address, port]() mutable
@@ -134,23 +135,20 @@ namespace Wepp
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 
-            TaskController<> task;
             if (!m_running)
             {
-                return task.finish();
+                return m_stopTask;
             }
-
             m_running = false;
+
             if (m_handle)
             {
                 closesocket(m_handle);
                 m_handle = 0;
             }
             
-            m_stopQueue.push(task);
-            
             m_listenSempahore.notifyOne();
-            return task;
+            return m_stopTask;
         }
 
         Task<std::shared_ptr<TcpSocket>> TcpListener::listen()
@@ -180,16 +178,13 @@ namespace Wepp
                 m_handle = 0;
             }
 
-            while (m_stopQueue.size())
-            {
-                m_stopQueue.front().finish();
-                m_stopQueue.pop();
-            }
             while (m_listenQueue.size())
             {
                 m_listenQueue.front().fail();
                 m_listenQueue.pop();
             }
+
+            m_stopTask.finish();
         }
 
     }

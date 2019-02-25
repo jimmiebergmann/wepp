@@ -33,11 +33,6 @@ namespace Wepp
     namespace Http
     {
 
-        static void foo(Task<bool> task)
-        {
-            int wat = 5;
-        }
-
         Server::Server() :
             m_running(false),
             m_stopped(true)
@@ -67,12 +62,14 @@ namespace Wepp
                 return task.fail();
             }
             m_stopped = false;
+
+            m_stopTask = TaskController<>();
             
             // Start main thread.
             m_thread = std::thread([this, task]() mutable
             {
                 // Start recieve pool.
-                m_recivePool.start(10, 100, [](std::shared_ptr<Socket::TcpSocket> socket)
+                m_recivePool.start([this](std::shared_ptr<Socket::TcpSocket> socket)
                 {
                     //std::cout << "Receiving data from peer..." << std::endl;
 
@@ -87,10 +84,13 @@ namespace Wepp
                     else if (size >= 0)
                     {
                         buffer[size] = 0;
+                        static size_t counter = 0;
+                        counter++;
+                        std::cout << "Count: " << counter << std::endl;
                         std::cout << buffer << std::endl;
                     }
 
-                });
+                }, 10, 100).wait();
 
                 // Start listener.
                 if (!m_listener.start("127.0.0.1", 80).wait().successful())
@@ -108,7 +108,7 @@ namespace Wepp
                 // Listen loop.
                 while (m_running)
                 {
-                    auto connection = m_listener.listen().wait(std::chrono::seconds(1));
+                    auto connection = m_listener.listen().wait();
 
                     if (!m_running)
                     {
@@ -117,18 +117,20 @@ namespace Wepp
 
                     if (connection.successful())
                     {
-                        if (!m_recivePool.work(connection()))
+                        if (!m_recivePool.enqueue(connection()))
                         {
                             throw std::runtime_error("Failed to start work.");
                         }
                     }
+                    else
+                    {
+                        std::cerr << "Failed listen task.";
+                    }
                 }
 
-                handleStop();
-                
+                handleStop();               
             });
            
-
             return task;
         }
 
@@ -136,32 +138,26 @@ namespace Wepp
         {
             std::lock_guard<std::mutex> lock(m_stopQueueMutex);
 
-            TaskController<> task;
-
             if (m_stopped)
             {
-                return task.finish();
+                return m_stopTask.finish();
             }
 
-            m_stopQueue.push(task);
+            m_listener.stop();
 
             m_running = false;
-            return task;
+            return m_stopTask;
         }
 
         void Server::handleStop()
         {
             std::lock_guard<std::mutex> lock(m_stopQueueMutex);
 
-            while (m_stopQueue.size())
-            {
-                m_stopQueue.front().finish();
-                m_stopQueue.pop();
-            }
-
-            m_recivePool.stop();
-
+            m_recivePool.stop().wait();
+            m_listener.stop().wait();
+            
             m_stopped = true;
+            m_stopTask.finish();
         }
 
     }

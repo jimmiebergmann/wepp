@@ -119,7 +119,7 @@ namespace Wepp
             std::thread m_listenThread;                                             /**< Listen thread.*/
             Semaphore m_listenSempahore;                                            /**< Sempahore, triggering thread to listen.*/
             std::queue<TaskController<std::shared_ptr<TcpSocket>>> m_listenQueue;   /**< Queue of listen tasks.*/
-            std::queue<TaskController<>> m_stopQueue;                               /**< Queue of stop tasks.*/
+            TaskController<> m_stopTask;                                            /**< Task for stopping the listener.*/
             std::mutex m_mutex;                                                     /**< Mutex lock, controlling sync.*/
 
         };

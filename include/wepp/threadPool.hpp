@@ -48,115 +48,72 @@ namespace Wepp
     template<typename ... Args>
     class ThreadPool;
 
+
+    /**
+    * Thread pool worker.
+    *
+    */
     template<typename ... Args>
-    class ThreadJob
+    class ThreadWorker
     {
 
     public:
 
-        ThreadJob(ThreadPool<Args...> & parent, std::function<void(Args...)> function) :
-            m_parent(parent),
-            m_running(false),
-            m_stopped(true)
-        {
-            m_running = true;
-            m_thread = std::thread([this, function]() mutable
-            {
-                while (m_running)
-                {
-                    m_workSemaphore.wait();
+        /**
+        * Constructor.
+        *
+        */
+        ThreadWorker(ThreadPool<Args...> & parent);
 
-                    if (!m_running)
-                    {
-                        std::lock_guard<std::mutex> lock(m_mutex);
-    
-                        while (m_stopQueue.size())
-                        {
-                            m_stopQueue.front().finish();
-                            m_stopQueue.pop();
-                        }
+        /**
+        * Destructor.
+        *
+        */
+        ~ThreadWorker();
 
-                        return;
-                    }
+        /**
+        * Start the worker thread.
+        *
+        */
+        bool start(std::function<void(Args...)> function);
 
-                    callFunction(function);
-                    m_parent.addToQueue(this);
+        /**
+        * Stop the worker thread.
+        *
+        */
+        Task<> stop();
 
-                }
-
-                m_stopped = true;
-
-            });
-
-            m_stopped = false;
-        }
-
-        virtual ~ThreadJob()
-        {
-            if (m_thread.joinable())
-            {
-                m_thread.join();
-            }
-        }
-
-        void work(Args ... args)
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-
-            if (!m_running)
-            {
-                throw std::runtime_error("Thread job has been stopped.");
-            }
-
-            m_parameters = std::tuple<Args...>(args...);
-
-            m_workSemaphore.notifyOne();
-            
-        }
-
-        Task<> stop()
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            TaskController<> task;
-
-            if (m_stopped)
-            {
-                return task.successful();
-            }
-
-            m_stopQueue.push(task);
-            m_running = false;
-            m_workSemaphore.notifyOne();
-
-            return task;
-        }
+        /**
+        * Execute job.
+        *
+        */
+        void execute(std::tuple<Args...> args);
 
     private:
 
-        void callFunction(std::function<void(Args...)> & function)
-        {
-            callFunctionHelper(function, std::index_sequence_for<Args...>());
-        }
+        /**
+        * Internal helper function, making it possible to pass a tuple as parameter pack.
+        *
+        */
+        void callFunction();
 
         template<std::size_t... Is>
-        void callFunctionHelper(std::function<void(Args...)> & function, std::index_sequence<Is...>)
-        {
-            function(std::get<Is>(m_parameters)...);
-        }
+        void callFunctionHelper(std::index_sequence<Is...>);
 
-        ThreadPool<Args...> & m_parent;
-        std::atomic_bool m_running;
-        std::atomic_bool m_stopped;
-        std::thread m_thread;
-        std::tuple<Args...> m_parameters;
-        std::mutex m_mutex;
-        std::queue<TaskController<>> m_stopQueue;
-        Semaphore m_workSemaphore;
+        ThreadPool<Args...> & m_parent;             /**< Reference of parent, thread pool. */
+        std::atomic_bool m_running;                 /**< Flag, indicating if the worker is running. */
+        std::thread m_thread;                       /**< Work thread. */
+        std::function<void(Args...)> m_function;    /**< Execution function. */
+        std::tuple<Args...> m_parameters;           /**< Latest parameters to execute, from the thread pool. */
+        std::mutex m_mutex;                         /**< Mutex protecting. */
+        Semaphore m_executeSemaphore;               /**< Sempahore triggering executing. */
+        TaskController<> m_stopTask;                /**< Stopping task. */
 
     };
 
     /**
-    * Thead pool class.
+    * Single function thread pool.
+    * Makes it possible to execute a single function on multiple threads, but with different arguments.
     *
     */
     template<typename ... Args>
@@ -165,136 +122,81 @@ namespace Wepp
 
     public:
 
-        ThreadPool() :
-            m_running(false),
-            m_size(0),
-            m_max(0)
-        { }
+        /**
+        * Default constructor.
+        *
+        */
+        ThreadPool();
 
-        ~ThreadPool()
-        {
-            stop();
+        /**
+        * Destructor.
+        *
+        */
+        ~ThreadPool();
 
-            for (auto it = m_threadSet.begin(); it != m_threadSet.end(); it++)
-            {
-                delete *it;
-            }
-        }
+        /**
+        * Deletet copy constructor.
+        *
+        */
+        ThreadPool(const ThreadPool &) = delete;
 
-        bool start(const size_t size, const size_t max, std::function<void(Args...)> function)
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
+        /**
+        * Start the thead pool.
+        *
+        * @param[in] function - Function to execute by workers.
+        * @param[in] minWorkers - Initial numbers of allocated workers.
+        * @param[in] maxWorkers - Maximum numbers of allocated workers. Set to same value as minWorkers if lower than that value.
+        *
+        */
+        Task<> start(std::function<void(Args...)> function, const size_t minWorkers, const size_t maxWorkers = 0);
 
-            // Check if it's possible to start.
-            if (m_running)
-            {
-                return false;
-            }
-            m_running = true;
+        /**
+        * Stop the thead pool.
+        *
+        */
+        Task<> stop();
 
-            // Initialize.
-            m_function = function;
-            m_size = size;
-            m_max = max > size ? max : size;
+        /**
+        * Enqueue jobs for workers.
+        *
+        * @return true if successfully enqueued job, else false.
+        *
+        */
+        bool enqueue(Args ... args);
 
-            allocateAppendJobs(m_size);
-
-            return true;
-        }
-
-        void stop()
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-
-            if (!m_running)
-            {
-                return;
-            }
-
-            std::vector<Task<>> stopTasks;
-            for (auto it = m_threadSet.begin(); it != m_threadSet.end(); it++)
-            {
-                stopTasks.push_back((*it)->stop());
-            }
-
-            for (auto it = stopTasks.begin(); it != stopTasks.end(); it++)
-            {
-                it->wait();
-                if (!it->successful())
-                {
-                    throw std::runtime_error("Failed to stop thread pool.");
-                }
-            }
-
-            m_running = false;
-        }
-
-        bool work(Args ... args)
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-
-            // Allocate more jobs if needed.
-            if (!m_threadQueue.size())
-            {
-                const size_t currentAllocCount = m_threadSet.size();
-                if (currentAllocCount == m_max)
-                {
-                    return false;
-                }
-
-                size_t allocateCount = std::min<size_t>(m_threadSet.size() - m_size, 2);
-
-                if (currentAllocCount + allocateCount >= m_max)
-                {
-                    allocateCount = m_max - currentAllocCount;
-                }
-
-                allocateAppendJobs(allocateCount);
-            }
-
-            auto * threadJob = m_threadQueue.front();
-            threadJob->work(args...);
-            m_threadQueue.pop();
-
-            return true;
-        }
-
-        void addToQueue(ThreadJob<Args...> * threadJob)
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            if (m_threadSet.find(threadJob) == m_threadSet.end())
-            {
-                throw std::runtime_error("Failed to put back job to queue.");
-                return;
-            }
-
-            m_threadQueue.push(threadJob);
-        }
-        
     private:
 
-        void allocateAppendJobs(const size_t count)
-        {
-            for (size_t i = 0; i < count; i++)
-            {
-                ThreadJob<Args...> * newJob = new ThreadJob<Args...>(*this, m_function);
-                m_threadQueue.push(newJob);
-                m_threadSet.insert(newJob);
-            }
-        }
+        /**
+        * Allocates more workers and places them in queue to receive jobs.
+        *
+        * @param[in] count - Number of workers to allocate.
+        *
+        */
+        void allocateWorkers(const size_t count);
 
-        std::atomic_bool m_running;
-        size_t m_size;
-        size_t m_max;
-        std::function<void(Args...)> m_function;
-        std::queue<ThreadJob<Args...> *> m_threadQueue;
-        std::set<ThreadJob<Args...> *> m_threadSet;
-        std::mutex m_mutex;
+        /**
+        * Enqueue worker.
+        *
+        */
+        void enqueueWorker(ThreadWorker<Args...> * worker);
+
+        std::atomic_bool m_running;                         /**< Flag indicating if the pool is running. */
+        TaskController<> m_stopTask;                        /**< Stopping task. */
+        size_t m_minWorkers;                                /**< Minimum numbers of workers beging allocated. */   
+        size_t m_maxWorkers;                                /**< Maximum numbers of workers beging allocated. */    
+        std::queue<ThreadWorker<Args...> *> m_workerQueue;  /**< Queue of workers available to receive work. */
+        std::set<ThreadWorker<Args...> *> m_workerSet;      /**< Set of all workers in this pool. */
+        std::queue<std::tuple<Args...>> m_jobQueue;         /**< Queue of jobs not yet distributed. */
+        std::function<void(Args...)> m_function;            /**< Function being executed by workers. */
+        std::thread m_thread;                               /**< Thread distrubuting jobs and [de]/allocating workers. */
+        std::mutex m_mutex;                                 /**< Mutex protecting the queue/set containers. */
+        Semaphore m_workerSemaphore;                        /**< Sempahore triggering available workers. */
+        Semaphore m_jobSemaphore;                           /**< Sempahore triggering available jobs. */
 
     };
 
 }
 
-//#include "wepp/threadPool.inl"
+#include "wepp/threadPool.inl"
 
 #endif

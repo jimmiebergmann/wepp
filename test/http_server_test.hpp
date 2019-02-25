@@ -16,8 +16,8 @@ TEST(Server, Start)
 
     EXPECT_TRUE(true);
 }
-/*
-TEST(Server, Route)
+
+/*TEST(Server, Route)
 {
     {
         Http::Server server;
@@ -36,9 +36,6 @@ TEST(Server, Route)
         };
 
         EXPECT_TRUE(server.start().wait() == TaskStatus::Successful);
-
-        //std::this_thread::sleep_for(std::chrono::duration<double>(1));
-        //server.stop().wait();
 
         sem1.wait();
         sem2.wait();
