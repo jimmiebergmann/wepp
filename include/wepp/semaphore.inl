@@ -73,4 +73,9 @@ namespace Wepp
         m_condition.notify_one();
     }
 
+    inline void Semaphore::reset()
+    {
+        m_value = 0;
+    }
+
 }

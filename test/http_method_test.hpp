@@ -3,7 +3,7 @@
 
 using namespace Wepp;
 
-TEST(Method, Name)
+TEST(Http_Method, Name)
 {
     EXPECT_STREQ(Http::getMethodName(Http::Method::Get).c_str(), "GET");
     EXPECT_STREQ(Http::getMethodName(Http::Method::Head).c_str(), "HEAD");

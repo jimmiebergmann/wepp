@@ -40,6 +40,11 @@ namespace Wepp
 
 
     template<typename Return>
+    Task<Return>::Task(const Task<Return> & task) :
+        m_members(task.m_members)
+    { }
+
+    template<typename Return>
     Task<Return>::Task(const TaskController<Return> & taskController) :
         m_members(taskController.m_members)
     { }

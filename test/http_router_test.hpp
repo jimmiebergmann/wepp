@@ -3,7 +3,7 @@
 
 using namespace Wepp;
 
-TEST(Router, Method)
+TEST(Http_Router, Method)
 {
     {
         {
@@ -108,7 +108,7 @@ TEST(Router, Method)
     } 
 }
 
-TEST(RouteMethod, Path)
+TEST(Http_RouteMethod, Path)
 {
     {
         Http::Router router;

@@ -23,49 +23,23 @@
 *
 */
 
-#ifndef WEPP_SEMAPHORE_HPP
-#define WEPP_SEMAPHORE_HPP
-
-#include "wepp/build.hpp"
-#include <mutex>
-#include <condition_variable>
-
-/**
-* Wepp namespace.
-*
-*/
 namespace Wepp
 {
-
-    /**
-    * Semaphore class.
-    *
-    */
-    class Semaphore
+    namespace  Priv
     {
 
-    public:
+        template<typename ... Args>
+        ReceivePoolWorker<Args...>::ReceivePoolWorker(ThreadPoolBase<Args...> * pool, ExecutionFunction executionFunction) :
+            ThreadWorker<Args...>(pool),
+            m_function(executionFunction)
+        { }
 
-        Semaphore();
-        ~Semaphore();
+        template<typename ... Args>
+        void ReceivePoolWorker<Args...>::execute(std::shared_ptr<Socket::TcpSocket> socket)
+        {
+            m_function(m_receiver, socket);
+        }
 
-        void wait();
-        bool tryWait();
-        //void notifyAll();
-        void notifyOne();
-
-        void reset();
-
-    private:
-
-        int                     m_value;
-        std::mutex              m_mutex;
-        std::condition_variable m_condition;
-
-    };
+    }
 
 }
-
-#include "wepp/semaphore.inl"
-
-#endif

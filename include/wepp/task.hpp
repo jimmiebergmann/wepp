@@ -81,7 +81,13 @@ namespace Wepp
         Task(Args ... args);
 
         /**
-        * Casting task controller to task.
+        * Reference this task to another task.
+        *
+        */
+        Task(const Task<Return> & task);
+
+        /**
+        * Reference this task to a task controller.
         *
         */
         Task(const TaskController<Return> & taskController);

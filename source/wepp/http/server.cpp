@@ -24,7 +24,7 @@
 */
 
 #include "wepp/http/server.hpp"
-#include "wepp/http/httpReceiver.hpp"
+#include "wepp/priv/httpReceiver.hpp"
 #include <chrono>
 #include <iostream>
 
@@ -72,16 +72,15 @@ namespace Wepp
                 const size_t poolMin = 10;
                 const size_t poolMax = 100;
 
-                // Start recieve pool.
-                m_recivePool.start([this](std::shared_ptr<Socket::TcpSocket> socket)
+                m_receivePool.start(poolMin, poolMax, [this](Priv::HttpReceiver & receiver, std::shared_ptr<Socket::TcpSocket> socket)
                 {
                     Router::CallbackFunc callbackFunction = nullptr;
-
                     Request request;
                     Response response;
-                    HttpReceiver httpReceiver(socket, request, response, 8192);
 
-                    bool status = httpReceiver.receive(
+                    receiver.setSocket(socket);
+                    const bool status = receiver.receive(request, response,
+
                         // On request.
                         [this, &callbackFunction](Request & request, Response & response) mutable -> bool
                         {
@@ -94,6 +93,7 @@ namespace Wepp
                             }
                             return true;
                         },
+
                         // On headers.
                         [this](Request & request, Response & response) -> bool
                         {
@@ -107,15 +107,15 @@ namespace Wepp
                     {
                         std::cout << "HTTP: " << (uint32_t)response.status() << ": " << request.resource() << std::endl;
                     }
-                    
+
                     // Execute callback.
                     if (status && callbackFunction)
                     {
                         callbackFunction(request, response);
                     }
+                }).wait();
 
-                }, poolMin, poolMax).wait();
-
+  
                 // Start listener.
                 if (!m_listener.start("127.0.0.1", 80).wait().successful())
                 {
@@ -141,10 +141,7 @@ namespace Wepp
 
                     if (connection.successful())
                     {
-                        if (!m_recivePool.enqueue(connection()))
-                        {
-                            throw std::runtime_error("Failed to start work.");
-                        }
+                       m_receivePool.enqueue(connection());
                     }
                     else
                     {
@@ -152,7 +149,7 @@ namespace Wepp
                     }
                 }
 
-                handleStop();               
+                handleStop();              
             });
            
             return task;
@@ -177,7 +174,7 @@ namespace Wepp
         {
             std::lock_guard<std::mutex> lock(m_stopQueueMutex);
 
-            m_recivePool.stop().wait();
+            //m_recivePool.stop().wait();
             m_listener.stop().wait();
             
             m_stopped = true;

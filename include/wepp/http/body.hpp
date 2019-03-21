@@ -91,6 +91,16 @@ namespace Wepp
             }
 
             /**
+            * Append data to body
+            *
+            */
+            Body & append(const char * data, const size_t size)
+            {
+                std::copy(data, data + size, std::back_inserter<std::vector<char>>(m_data));
+                return *this;
+            }
+
+            /**
             * Assigning operator.
             *
             */
@@ -101,7 +111,7 @@ namespace Wepp
             }
 
             /**
-            * Incremental assignment operator.
+            * Incremental assignment operator by std::string.
             *
             */
             Body & operator +=(const std::string & string)

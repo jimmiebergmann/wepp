@@ -23,15 +23,24 @@
 *
 */
 
-#ifndef WEPP_HTTP_HTTP_RECEIVER_HPP
-#define WEPP_HTTP_HTTP_RECEIVER_HPP
+#ifndef WEPP_PRIV_RECEIVE_POOL_HPP
+#define WEPP_PRIV_RECEIVE_POOL_HPP
 
 #include "wepp/build.hpp"
-#include "wepp/http/request.hpp"
-#include "wepp/http/response.hpp"
+#include "wepp/priv/threadPool.hpp"
 #include "wepp/socket/tcpSocket.hpp"
-#include <memory>
+#include "wepp/priv/httpReceiver.hpp"
+/*#include "wepp/task.hpp"
+#include "wepp/semaphore.hpp"
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <queue>
+#include <set>
 #include <functional>
+#include <exception>
+#include <tuple>
+*/
 
 /**
 * Wepp namespace.
@@ -41,47 +50,45 @@ namespace Wepp
 {
 
     /**
-    * Http namespace.
+    * Private namespace.
     *
     */
-    namespace Http
+    namespace  Priv
     {
-
-        /**
-        * Http receiver class.
-        *
-        */
-        class HttpReceiver
+        template<typename ... Args>
+        class ReceivePoolWorker : public ThreadWorker<Args...>
         {
 
         public:
 
-            /**
-            * Default constructor.
-            *
-            */
-            HttpReceiver(const std::shared_ptr<Socket::TcpSocket> socket, Request & request, Response & response, const size_t bufferSize);
+            typedef std::function<void(HttpReceiver &, std::shared_ptr<Socket::TcpSocket>)> ExecutionFunction;
 
             /**
-            * Receive and parse data.
-            *
-            * @param[in] onRequest - Function executed when the request line has been received. The receiver is cancelled if the function returns false.
-            * @param[in] onHeaders - Function executed when all headers are received. The receiver is cancelled if the function returns false.
+            * Constructor.
             *
             */
-            bool receive(std::function<bool(Request &, Response &)> onRequest, std::function<bool(Request &, Response &)> onHeaders);
+            ReceivePoolWorker(ThreadPoolBase<Args...> * pool, ExecutionFunction executionFunction);
+
+            /**
+            * Executes the function passed to constructor.
+            *
+            */
+            virtual void execute(std::shared_ptr<Socket::TcpSocket> socket);
 
         private:
 
-            std::shared_ptr<Socket::TcpSocket> m_socket;     /**< Socket, receiving data from.*/
-            Request & m_request;                             /**< Reference to request.*/
-            Response & m_response;                           /**< Reference to response.*/
-            const size_t m_bufferSize;                       /**< Size of buffers.*/
+            ExecutionFunction   m_function;
+            HttpReceiver        m_receiver;
 
         };
+
+        typedef ThreadPool<ReceivePoolWorker<std::shared_ptr<Socket::TcpSocket>>, std::shared_ptr<Socket::TcpSocket>> ReceivePool;
 
     }
 
 }
+
+
+#include "wepp/priv/receivePool.inl"
 
 #endif

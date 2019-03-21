@@ -29,7 +29,8 @@
 #include "wepp/build.hpp"
 #include "wepp/http/router.hpp"
 #include "wepp/task.hpp"
-#include "wepp/threadPool.hpp"
+//#include "wepp/priv/receivePool.hpp"
+#include "wepp/priv/receivePool.hpp"
 #include "wepp/socket/tcpListener.hpp"
 #include <thread>
 #include <mutex>
@@ -112,7 +113,7 @@ namespace Wepp
             TaskController<> m_stopTask;                /**< Task for stopping the server. */
             std::mutex m_stopQueueMutex;                /**< Mutex for the stop queue. */
 
-            ThreadPool<std::shared_ptr<Socket::TcpSocket>> m_recivePool;
+            Priv::ReceivePool m_receivePool;
 
         };
 
