@@ -74,7 +74,9 @@ namespace Wepp
                 // Bind listen socket.
                 sockaddr_in service;
                 service.sin_family = AF_INET;
-                service.sin_addr.s_addr = inet_addr(address.c_str()); // DEPRECIATED! Use:    int inet_pton(int af, const char *src, void *dst);
+                unsigned long addr = 0; // MUST AT LEAST BE ABLE TO HOLD in_addr.
+                InetPton(AF_INET, address.c_str(), &addr);
+                service.sin_addr.s_addr = addr; //inet_addr(address.c_str()); // DEPRECIATED! Use:    int inet_pton(int af, const char *src, void *dst);
                 service.sin_port = htons(port);
 
                 int result = ::bind(m_handle, (SOCKADDR *)& service, sizeof(service));

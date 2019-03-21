@@ -219,7 +219,7 @@ namespace Wepp
         }
 
         template<typename T, typename ... Args>
-        void ThreadPool<T, Args...>::returnWorker(Worker * worker)
+        inline void ThreadPool<T, Args...>::returnWorker(Worker * worker)
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 

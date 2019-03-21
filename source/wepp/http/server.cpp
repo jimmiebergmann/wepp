@@ -95,7 +95,7 @@ namespace Wepp
                         },
 
                         // On headers.
-                        [this](Request & request, Response & response) -> bool
+                        [this](Request & /*request*/, Response & /*response*/) -> bool
                         {
 
                             return true;

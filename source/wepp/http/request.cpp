@@ -75,7 +75,7 @@ namespace Wepp
         Request & Request::method(const std::string & method)
         {
             m_method = method;
-            std::transform(m_method.begin(), m_method.end(), m_method.begin(), ::toupper);
+            std::transform(m_method.begin(), m_method.end(), m_method.begin(), [](int c) -> char {return static_cast<char>(::toupper(c)); });
             return *this;
         }
 

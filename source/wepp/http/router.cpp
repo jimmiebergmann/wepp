@@ -62,7 +62,7 @@ namespace Wepp
         RouteMethod & Router::operator[](const std::string & method)
         {
             std::string methodName = method;
-            std::transform(methodName.begin(), methodName.end(), methodName.begin(), ::toupper);
+            std::transform(methodName.begin(), methodName.end(), methodName.begin(), [](int c) -> char {return static_cast<char>(::toupper(c)); });
 
             auto it = m_methods.find(methodName);
             if (it != m_methods.end())

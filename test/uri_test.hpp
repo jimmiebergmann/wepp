@@ -28,22 +28,22 @@ TEST(Uri, Clear)
 {
     Uri uri;
 
-    EXPECT_EQ(uri.schema.size(), 0);
-    EXPECT_EQ(uri.authority.size(), 0);
-    EXPECT_EQ(uri.path.size(), 0);
-    EXPECT_EQ(uri.query.size(), 0);
-    EXPECT_EQ(uri.fragment.size(), 0);
-    EXPECT_TRUE(uri.isEmpty()), 0;
+    EXPECT_EQ(uri.schema.size(), size_t(0));
+    EXPECT_EQ(uri.authority.size(), size_t(0));
+    EXPECT_EQ(uri.path.size(), size_t(0));
+    EXPECT_EQ(uri.query.size(), size_t(0));
+    EXPECT_EQ(uri.fragment.size(), size_t(0));
+    EXPECT_TRUE(uri.isEmpty()), size_t(0);
 
     uri.schema = uri.authority = uri.path = uri.query = uri.fragment = "foobar";
     EXPECT_FALSE(uri.isEmpty());
 
     uri.clear();
-    EXPECT_EQ(uri.schema.size(), 0);
-    EXPECT_EQ(uri.authority.size(), 0);
-    EXPECT_EQ(uri.path.size(), 0);
-    EXPECT_EQ(uri.query.size(), 0);
-    EXPECT_EQ(uri.fragment.size(), 0);
+    EXPECT_EQ(uri.schema.size(), size_t(0));
+    EXPECT_EQ(uri.authority.size(), size_t(0));
+    EXPECT_EQ(uri.path.size(), size_t(0));
+    EXPECT_EQ(uri.query.size(), size_t(0));
+    EXPECT_EQ(uri.fragment.size(), size_t(0));
     EXPECT_TRUE(uri.isEmpty());
 }
 

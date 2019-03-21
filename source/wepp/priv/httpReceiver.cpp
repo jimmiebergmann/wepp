@@ -99,8 +99,7 @@ namespace Wepp
                 return false;
             }
 
-            int result = m_bufferSize - m_receivedPosition;
-            std::copy(string.begin(), string.end(), m_currentReceivePointer);
+            std::memcpy(m_currentReceivePointer, string.c_str(), string.size());
 
             m_currentReceivePointer += string.size();
             m_receivedPosition += string.size();
@@ -212,7 +211,7 @@ namespace Wepp
             const size_t moveSpace = static_cast<size_t>(m_currentPointer   - m_buffer.get());
             const size_t availableSpace = freeSpace + moveSpace;
 
-            std::copy(m_currentPointer, m_currentReceivePointer, m_buffer.get());
+            std::memcpy(m_buffer.get(), m_currentPointer, static_cast<size_t>(m_currentReceivePointer - m_currentPointer));
 
             m_receivedPosition -= moveSpace;
             m_currentReceivePointer -= moveSpace;
@@ -244,7 +243,7 @@ namespace Wepp
                 return false;
             }
 
-            std::copy(m_currentPointer, m_currentReceivePointer, m_buffer.get());
+            std::memcpy(m_buffer.get(), m_currentPointer, static_cast<size_t>(m_currentReceivePointer - m_currentPointer));
 
             m_receivedPosition -= moveSpace;
             m_currentReceivePointer -= moveSpace;
@@ -344,7 +343,7 @@ namespace Wepp
 
             while (state == State::Headers)
             {
-                if(headerCount > m_limitHeaderFieldCount)
+                if (headerCount > m_limitHeaderFieldCount)
                 {
                     response.status(Http::Status::BadRequest);
                     return false;
@@ -382,7 +381,7 @@ namespace Wepp
                 }
 
                 std::string fieldName = std::string(matches[1].first, matches[1].second);
-                std::transform(fieldName.begin(), fieldName.end(), fieldName.begin(), ::tolower);
+                std::transform(fieldName.begin(), fieldName.end(), fieldName.begin(), [](int c) -> char {return static_cast<char>(::tolower(c)); });
                 std::string fieldValue = std::string(matches[3].first, matches[3].second);
 
                 // Parse content-length.

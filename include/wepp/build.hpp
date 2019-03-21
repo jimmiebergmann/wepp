@@ -33,6 +33,7 @@
     #define WEPP_PLATFORM_WINDOWS
 
     #include <WinSock2.h>
+    #include <ws2tcpip.h>
     #include <Windows.h>
     
     #ifdef max
