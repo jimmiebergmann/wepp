@@ -275,10 +275,9 @@ namespace Wepp
             m_buffer(m_bufferSize)
         { }
 
-        bool HttpReceiver::receive(std::shared_ptr<Socket::TcpSocket> socket,
-                                   Http::Request & request, Http::Response & response,
-                                   std::function<bool(Http::Request &, Http::Response &)> onRequest,
-                                   std::function<bool(Http::Request &, Http::Response &)> onHeaders)
+        HttpReceiver::Status HttpReceiver::receive(std::shared_ptr<Socket::TcpSocket> socket,
+                                                   Http::Request & request, Http::Response & response,
+                                                   std::function<bool(Http::Request &, Http::Response &)> onRequest)
         {
             response.status(Http::Status::Ok);
 
@@ -302,14 +301,14 @@ namespace Wepp
             while(state == State::RequestLine)
             {
                 recvSize = m_buffer.receive(*socket);
-                if (recvSize <= 0)
+                if (recvSize == 0)
                 {
-                    if (recvSize == -2)
-                    {
-                        response.status(Http::Status::InternalServerError);
-                    }
-                    //auto error = Socket::TcpSocket::getLastError();
-                    return false;
+                    return Status::Disconnected;
+                }
+                else if (recvSize < 0)
+                {
+                    response.status(Http::Status::InternalServerError);
+                    return Status::InternalError;
                 }
 
                 std::cmatch matches;
@@ -318,7 +317,7 @@ namespace Wepp
                 if (foundRequestLine == HttpReceiverBuffer::FindResult::ReachedMaxLength)
                 {
                     response.status(Http::Status::UriTooLong);
-                    return false;
+                    return Status::PeerError;
                 }
                 else if (foundRequestLine == HttpReceiverBuffer::FindResult::NotFound)
                 {
@@ -331,12 +330,12 @@ namespace Wepp
                 if (version != "HTTP/1.1")
                 {
                     response.status(Http::Status::HttpVersionNotSupported);
-                    return false;
+                    return Status::PeerError;
                 }
 
                 if (!onRequest(request, response))
                 {
-                    return false;
+                    return Status::PeerError;
                 }
 
                 state = State::Headers;
@@ -347,7 +346,7 @@ namespace Wepp
                 if (headerCount > m_limitHeaderFieldCount)
                 {
                     response.status(Http::Status::BadRequest);
-                    return false;
+                    return Status::PeerError;
                 }
 
                 std::cmatch matches;
@@ -356,19 +355,19 @@ namespace Wepp
                 if (foundHeaderLine == HttpReceiverBuffer::FindResult::ReachedMaxLength)
                 {
                     response.status(Http::Status::RequestHeaderFieldsTooLarge);
-                    return false;
+                    return Status::PeerError;
                 }
                 else if (foundHeaderLine == HttpReceiverBuffer::FindResult::NotFound)
                 {
                     recvSize = m_buffer.receive(*socket);
-                    if (recvSize <= 0)
+                    if (recvSize == 0)
                     {
-                        if (recvSize == -2)
-                        {
-                            response.status(Http::Status::InternalServerError);
-                        }
-                        //auto error = Socket::TcpSocket::getLastError();
-                        return false;
+                        return Status::Disconnected;
+                    }
+                    else if (recvSize < 0)
+                    {
+                        response.status(Http::Status::InternalServerError);
+                        return Status::InternalError;
                     }
                     continue;
                 }
@@ -378,7 +377,7 @@ namespace Wepp
                 if (std::string(matches[2].first, matches[2].second).size() != 0)
                 {
                     response.status(Http::Status::BadRequest);
-                    return false;
+                    return Status::PeerError;
                 }
 
                 std::string fieldName = std::string(matches[1].first, matches[1].second);
@@ -395,14 +394,14 @@ namespace Wepp
                     if (ss.fail())
                     {
                         response.status(Http::Status::BadRequest);
-                        return false;
+                        return Status::PeerError;
                     }
 
                     // Do not allow multiple content-length fields with different values.
                     if (foundContentLengthHeader && contentLength != tempContentLength)
                     {
                         response.status(Http::Status::BadRequest);
-                        return false;
+                        return Status::PeerError;
                     }
 
                     contentLength = tempContentLength;
@@ -412,7 +411,7 @@ namespace Wepp
                 else if (fieldName == "transfer-encoding")
                 {
                     response.status(Http::Status::NotAcceptable);
-                    return false;
+                    return Status::PeerError;
                 }
 
                 request.headers()[fieldName] = fieldValue;
@@ -442,20 +441,20 @@ namespace Wepp
                     }
 
                     recvSize = m_buffer.receive(*socket);
-                    if (recvSize <= 0)
+                    if (recvSize == 0)
                     {
-                        if (recvSize == -2)
-                        {
-                            response.status(Http::Status::InternalServerError);
-                        }
-                        //auto error = Socket::TcpSocket::getLastError();
-                        return false;
+                        return Status::Disconnected;
+                    }
+                    else if (recvSize < 0)
+                    {
+                        response.status(Http::Status::InternalServerError);
+                        return Status::InternalError;
                     }
 
                 } while (state == State::Body);
             }
 
-            return true;
+            return Status::Ok;
         }
 
     }

@@ -120,6 +120,18 @@ namespace Wepp
         public:
             
             /**
+            * Enumerator of different return codes of receive().
+            *
+            */
+            enum class Status
+            {
+                Ok,
+                Disconnected,
+                PeerError,
+                InternalError
+            };
+
+            /**
             * Default constructor.
             *
             * @param[in] limitRequestLine       - Maximum allowed length of request line. Default: 8192. Clamped: 32 minimum.
@@ -143,10 +155,9 @@ namespace Wepp
             
             *
             */
-            bool receive(std::shared_ptr<Socket::TcpSocket> socket,
-                         Http::Request & request, Http::Response & response,
-                         std::function<bool(Http::Request &, Http::Response &)> onRequest,
-                         std::function<bool(Http::Request &, Http::Response &)> onHeaders);
+            Status receive(std::shared_ptr<Socket::TcpSocket> socket,
+                           Http::Request & request, Http::Response & response,
+                           std::function<bool(Http::Request &, Http::Response &)> onRequest);
 
         private:
 

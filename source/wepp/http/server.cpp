@@ -78,7 +78,7 @@ namespace Wepp
                     Request request;
                     Response response;
 
-                    const bool status = receiver.receive(socket, request, response,
+                    const auto status = receiver.receive(socket, request, response,
 
                         // On request.
                         [this, &callbackFunction](Request & request, Response & response) mutable -> bool
@@ -91,24 +91,11 @@ namespace Wepp
                                 return false;
                             }
                             return true;
-                        },
-
-                        // On headers.
-                        [this](Request & /*request*/, Response & /*response*/) -> bool
-                        {
-
-                            return true;
                         }
                     );
 
-                    // Handle errors occured while receiving request.
-                    if (response.status() != Status::Ok)
-                    {
-                        //std::cout << "HTTP: " << (uint32_t)response.status() << ": " << request.resource() << std::endl;
-                    }
-
                     // Execute callback.
-                    if (status && callbackFunction)
+                    if (status == Priv::HttpReceiver::Status::Ok && callbackFunction)
                     {
                         callbackFunction(request, response);
                     }
@@ -123,9 +110,9 @@ namespace Wepp
                         //"Date: Sun, 18 Oct 2012 10:36:20 GMT\r\n"
                     dummyResponse +=
                         "Server: Wepp\r\n"
-                        "Content-Length: 3\r\n"
+                        "Content-Length: 7\r\n"
                         "Connection: Closed\r\n\r\n"
-                        "hej";
+                        "foo bar";
                     // "Content-Type: text/html\r\n";
 
                     socket->send(dummyResponse);
