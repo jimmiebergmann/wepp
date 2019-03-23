@@ -48,7 +48,7 @@ namespace Wepp
             }
         }
 
-        Task<> Server::start()
+        Task<> Server::start(const unsigned short port, const std::string & endpoint)
         {
             std::lock_guard<std::mutex> lock(m_stopQueueMutex);
 
@@ -65,9 +65,9 @@ namespace Wepp
             m_stopped = false;
 
             m_stopTask = TaskController<>();
-            
+
             // Start main thread.
-            m_thread = std::thread([this, task]() mutable
+            m_thread = std::thread([this, task, port, endpoint]() mutable
             {
                 const size_t poolMin = 10;
                 const size_t poolMax = 100;
@@ -115,15 +115,15 @@ namespace Wepp
                     }
                 }).wait();
 
-  
+
                 // Start listener.
-                if (!m_listener.start("127.0.0.1", 80).wait().successful())
+                if (!m_listener.start(port, endpoint).wait().successful())
                 {
                     m_stopped = true;
                     task.fail();
                     return;
                 }
-  
+
                 // Set task as finished.
                 m_running = true;
                 m_stopped = false;
@@ -149,9 +149,9 @@ namespace Wepp
                     }
                 }
 
-                handleStop();              
+                handleStop();
             });
-           
+
             return task;
         }
 
@@ -176,7 +176,7 @@ namespace Wepp
 
             //m_recivePool.stop().wait();
             m_listener.stop().wait();
-            
+
             m_stopped = true;
             m_stopTask.finish();
         }

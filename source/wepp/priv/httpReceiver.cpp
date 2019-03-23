@@ -79,7 +79,7 @@ namespace Wepp
             {
                 return -2;
             }
-            
+
             int result = socket.receive(m_currentReceivePointer, m_bufferSize - m_receivedPosition);
 
             if (result)
@@ -124,7 +124,7 @@ namespace Wepp
             m_currentPointer = m_newlinePointer + 2;
             m_newlinePointer = nullptr;
             m_newlineResult = FindResult::NotFound;
-            
+
             return FindResult::Found;
         }
 
@@ -177,7 +177,7 @@ namespace Wepp
             const bool useMaxLength = maxLength &&
                                       (m_buffer.get() + maxLength <= m_bufferEndPointer) &&
                                       (static_cast<size_t>(m_currentReceivePointer - m_currentPointer) > maxLength);
-            
+
             char * findFrom = m_lastFindnewlinePointer ? m_lastFindnewlinePointer : m_currentPointer;
             char * findTo = useMaxLength ? m_currentPointer + maxLength : m_currentReceivePointer;
 
@@ -197,7 +197,7 @@ namespace Wepp
 
             m_lastFindnewlinePointer = nullptr;
             m_newlinePointer = foundPos;
-            m_newlineResult = FindResult::Found;       
+            m_newlineResult = FindResult::Found;
         }
 
         bool HttpReceiverBuffer::makeSpace()
@@ -210,6 +210,10 @@ namespace Wepp
             const size_t freeSpace = static_cast<size_t>(m_bufferEndPointer - m_currentReceivePointer);
             const size_t moveSpace = static_cast<size_t>(m_currentPointer   - m_buffer.get());
             const size_t availableSpace = freeSpace + moveSpace;
+            if (!availableSpace)
+            {
+                return false;
+            }
 
             std::memcpy(m_buffer.get(), m_currentPointer, static_cast<size_t>(m_currentReceivePointer - m_currentPointer));
 
@@ -291,7 +295,8 @@ namespace Wepp
 
             State state = State::RequestLine;
             int recvSize = 0;
-            int64_t contentLength = -1;
+            size_t contentLength = 0;
+            bool foundContentLengthHeader = false;
             size_t headerCount = 0;
 
             // Make sure to reset the buffer, due to possibility of multiple calls of this function.
@@ -389,22 +394,23 @@ namespace Wepp
                 {
                     // Parse value.
                     std::stringstream ss(fieldValue);
-                    int64_t tempContantLength = -1;
-                    ss >> tempContantLength;
-                    if (ss.fail() || tempContantLength < 0)
+                    size_t tempContentLength = 0;
+                    ss >> tempContentLength;
+                    if (ss.fail())
                     {
                         response.status(Http::Status::BadRequest);
                         return false;
                     }
 
                     // Do not allow multiple content-length fields with different values.
-                    if (contentLength != -1 && contentLength != tempContantLength)
+                    if (foundContentLengthHeader && contentLength != tempContentLength)
                     {
                         response.status(Http::Status::BadRequest);
                         return false;
                     }
 
-                    contentLength = tempContantLength;
+                    contentLength = tempContentLength;
+                    foundContentLengthHeader = true;
                 }
                 // Chunked request is not yet supported
                 else if (fieldName == "transfer-encoding")
@@ -421,19 +427,17 @@ namespace Wepp
                     state = State::Body;
                     continue;
                 }
-                
+
             }
 
             // Parse body if it's present in request.
             // See: https://tools.ietf.org/html/rfc7230#section-3.3.3
-            bool bodyIsPresent = contentLength > 0LL;
+            bool bodyIsPresent = contentLength > 0;
             if (bodyIsPresent)
             {
                 size_t totalReceived = 0;
                 do
                 {
-                    //request.body().append(&(*buffer)[0] + lastReadTo, contentLength);
-                   
                     totalReceived += m_buffer.readAll(request.body());
 
                     if (totalReceived == contentLength)
@@ -454,7 +458,7 @@ namespace Wepp
 
                 } while (state == State::Body);
             }
-            
+
             return true;
         }
 

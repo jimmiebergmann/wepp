@@ -82,7 +82,7 @@ namespace Wepp
             * Asynchronous function for starting the server.
             *
             */
-            Task<> start();
+            Task<> start(const unsigned short port, const std::string & endpoint = "");
 
             /**
             * Asynchronous function for stopping the server.
@@ -92,7 +92,7 @@ namespace Wepp
 
             /**
             * Class containing all the routes.
-            * 
+            *
             * @remark Do not change any routes when the server has been started via start().
             *
             */

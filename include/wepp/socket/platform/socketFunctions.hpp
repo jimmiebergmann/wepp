@@ -26,17 +26,18 @@
 #ifndef WEPP_SOCKET_PLATFORM_SOCKET_FUNCTIONS_HPP
 #define WEPP_SOCKET_PLATFORM_SOCKET_FUNCTIONS_HPP
 
-#if defined(WEPP_PLATFORM_WINDOWS)
-    #define WEPP_IS_SOCKET_VALID(socket) (socket != INVALID_SOCKET)
-    #define WEPP_IS_SOCKET_INVALID(socket) (socket == INVALID_SOCKET)
-    #define WEPP_SOCKADDR_TYPE SOCKADDR
-    #define WEPP_CLOSE_SOCKET(socket) closesocket(socket)
-#elif defined(WEPP_PLATFORM_LINUX)
-    #define WEPP_IS_SOCKET_VALID(socket) (socket >= 0)
-    #define WEPP_IS_SOCKET_INVALID(socket) (socket < 0)
-    #define WEPP_SOCKADDR_TYPE sockaddr
-    #define WEPP_CLOSE_SOCKET(socket) close(socket)
-#endif
+#include <string>
 
+#if defined(WEPP_PLATFORM_WINDOWS)
+    #define WEPP_SOCKADDR_TYPE SOCKADDR
+    #define WeppIsSocketValid(socket) (socket != INVALID_SOCKET)
+    #define WeppIsSocketInvalid(socket) (socket == INVALID_SOCKET)
+    #define WeppCloseSocket(socket) closesocket(socket)
+#elif defined(WEPP_PLATFORM_LINUX)
+    #define WEPP_SOCKADDR_TYPE sockaddr
+    #define WeppIsSocketValid(socket) (socket >= 0)
+    #define WeppIsSocketInvalid(socket) (socket < 0)
+    #define WeppCloseSocket(socket) close(socket)
+#endif
 
 #endif

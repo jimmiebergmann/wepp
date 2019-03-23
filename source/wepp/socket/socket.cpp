@@ -46,7 +46,7 @@ namespace Wepp
         {
             if (m_handle)
             {
-                WEPP_CLOSE_SOCKET(m_handle);
+                WeppCloseSocket(m_handle);
             }
         }
 

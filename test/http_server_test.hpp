@@ -49,7 +49,7 @@ TEST(Server, Route)
             sem2.notifyOne();
         };
 
-        EXPECT_TRUE(server.start().wait() == TaskStatus::Successful);
+        EXPECT_TRUE(server.start(80).wait() == TaskStatus::Successful);
 
         sem1.wait();
         sem2.wait();

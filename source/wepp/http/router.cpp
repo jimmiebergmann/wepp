@@ -71,7 +71,7 @@ namespace Wepp
             }
 
             RouteMethod * routeMethod = new RouteMethod(methodName);
-            auto result = m_methods.insert({ methodName, routeMethod });
+            m_methods.insert({ methodName, routeMethod });
             return *routeMethod;
         }
 
@@ -113,7 +113,7 @@ namespace Wepp
             {
                 dirs.push_back(m[1].length() ? m[1] : m[2]);
             }
-            
+
             RouteNode * currentNode = &m_rootNode;
             for (auto const & dir : dirs)
             {
@@ -148,7 +148,7 @@ namespace Wepp
                         size_t matchLength = match.length();
                         size_t matchPosition = match.position();
                         std::string groupedMatch;
-                        
+
                         if (match[1].str().size())
                         {
                             groupedMatch = "(" + match[1].str() + ")";
@@ -157,7 +157,7 @@ namespace Wepp
                         {
                             groupedMatch = "(.*)";
                         }
-                    
+
                         // Replace tag with regex
                         tagDir.replace(matchPosition + currSearchPos, matchLength, groupedMatch);
                         currSearchPos += groupedMatch.length() + match.prefix().length();
@@ -166,7 +166,7 @@ namespace Wepp
                     // Add new route to previous node.
                     newRouteNode->dir = tagDir;
                     currentNode->tagTree.insert({ dir, newRouteNode.get() });
-                    
+
 
                     currentNode = newRouteNode.release();
                     continue;
@@ -281,7 +281,7 @@ namespace Wepp
             callback = p_callback;
             return *this;
         }
-       
+
     }
 
 }

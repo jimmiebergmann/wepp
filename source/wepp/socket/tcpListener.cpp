@@ -46,7 +46,7 @@ namespace Wepp
             }
         }
 
-        Task<> TcpListener::start(const std::string address, const uint16_t port)
+        Task<> TcpListener::start(const uint16_t port, const std::string endpoint)
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -60,30 +60,40 @@ namespace Wepp
             m_stopTask = TaskController<>();
 
             m_running = true;
-            m_listenThread = std::thread([this, task, address, port]() mutable
+            m_listenThread = std::thread([this, task, port, endpoint]() mutable
             {
+                // Get address as integer.
+                uint32_t endpintAddr = htonl(INADDR_ANY);
+                if(endpoint.size() && inet_pton(AF_INET, endpoint.c_str(), &endpintAddr) != 1)
+                {
+                    //std::cerr << "Invalid ip address: " << address << " - error: " << Socket::getLastError() << std::endl;
+                    stopListen();
+                    task.fail();
+                    return;
+                }
+
                 // Create listen socket.
                 m_handle = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-                if(WEPP_IS_SOCKET_INVALID(m_handle))
+                if(WeppIsSocketInvalid(m_handle))
                 {
                     //std::cerr << "socket function failed with error: " << Socket::getLastError() << std::endl;
                     m_handle = 0;
                     stopListen();
+                    task.fail();
                     return;
                 }
-
                 // Bind listen socket.
                 sockaddr_in service;
                 service.sin_family = AF_INET;
-                unsigned long addr = 0; // MUST AT LEAST BE ABLE TO HOLD in_addr.
-                //InetPton(AF_INET, address.c_str(), &addr);
-                service.sin_addr.s_addr = htonl( INADDR_ANY );//addr; //inet_addr(address.c_str()); // DEPRECIATED! Use:    int inet_pton(int af, const char *src, void *dst);
+                service.sin_addr.s_addr = endpintAddr;
                 service.sin_port = htons(port);
 
-                if(::bind(m_handle, reinterpret_cast<const WEPP_SOCKADDR_TYPE *>(&service), sizeof( service ) ) != 0 )
+                int ret = 0;
+                if( (ret = ::bind(m_handle, reinterpret_cast<const WEPP_SOCKADDR_TYPE *>(&service), sizeof( service ) )) != 0 )
                 {
-                    // std::cerr << "bind function failed with error: " << Socket::getLastError() << std::endl;
+                    //std::cerr << "bind function failed with error: " << Socket::getLastError() << std::endl;
                     stopListen();
+                    task.fail();
                     return;
                 }
 
@@ -108,7 +118,7 @@ namespace Wepp
 
                     // Accept the connection.
                     Socket::Handle connection = ::accept(m_handle, NULL, NULL);
-                    if (WEPP_IS_SOCKET_INVALID(connection) || !m_running)
+                    if (WeppIsSocketInvalid(connection) || !m_running)
                     {
                         //std::cerr << "accept failed with error: " << Socket::getLastError() << std::endl;
                         stopListen();
@@ -145,7 +155,7 @@ namespace Wepp
 
             if (m_handle)
             {
-                WEPP_CLOSE_SOCKET(m_handle);
+                WeppCloseSocket(m_handle);
                 m_handle = 0;
             }
 
@@ -176,7 +186,7 @@ namespace Wepp
 
             if (m_handle)
             {
-                WEPP_CLOSE_SOCKET(m_handle);
+                WeppCloseSocket(m_handle);
                 m_handle = 0;
             }
 

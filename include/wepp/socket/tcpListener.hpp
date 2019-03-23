@@ -79,8 +79,8 @@ namespace Wepp
             /**
             * Start the listening thread.
             *
-            * @param[in] address - Endpoint address.
             * @param[in] address - Endpoint port.
+            * @param[in] endpoint - Endpoint address.
             *
             * @return Task. Call wait() on the task to wait for the listener complete the startup.
             *
@@ -89,7 +89,7 @@ namespace Wepp
             * @see listen
             *
             */
-            Task<> start(const std::string address, const uint16_t port);
+            Task<> start(const uint16_t port, const std::string endpoint);
 
             /**
             * Stop listening.
@@ -101,7 +101,7 @@ namespace Wepp
 
             /**
             * Listen for incoming connections.
-            * 
+            *
             * @return Task containg a tcp socket. Call wait() on the task to wait for incoming connection.
             *
             */

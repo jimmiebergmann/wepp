@@ -118,9 +118,10 @@ namespace Wepp
 
         private:
 
+            std::string m_method;       /**< Request method. */
             std::string m_resource;     /**< Request URI/resource. */
             std::string m_version;      /**< Version of HTTP protocol. */
-            std::string m_method;       /**< Request method. */
+
             HeaderMap m_headers;        /**< Headers map. */
             Body m_body;                /**< Request body. */
 
