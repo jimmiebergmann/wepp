@@ -96,7 +96,7 @@ namespace Wepp
             */
             Body & append(const char * data, const size_t size)
             {
-                std::copy(data, data + size, std::back_inserter<std::vector<char>>(m_data));
+                std::copy(data, data + size, std::back_inserter<std::vector<char> >(m_data));
                 return *this;
             }
 
@@ -116,7 +116,7 @@ namespace Wepp
             */
             Body & operator +=(const std::string & string)
             {
-                std::copy(string.begin(), string.end(), std::back_inserter<std::vector<char>>(m_data));
+                std::copy(string.begin(), string.end(), std::back_inserter<std::vector<char> >(m_data));
                 return *this;
             }
 
@@ -126,7 +126,7 @@ namespace Wepp
             */
             Body & operator <<(const std::string & string)
             {
-                std::copy(string.begin(), string.end(), std::back_inserter<std::vector<char>>(m_data));
+                std::copy(string.begin(), string.end(), std::back_inserter<std::vector<char> >(m_data));
                 return *this;
             }
 
