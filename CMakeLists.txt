@@ -17,6 +17,12 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+## Code coverage
+option(CODE_COVERAGE "Enable coverage reporting" OFF)
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
+endif(CODE_COVERAGE)
 
 # Warnings as errors
 if(MSVC)
@@ -45,22 +51,6 @@ add_library(wepp SHARED ${wepp_files}) # Create shared library
 IF (WIN32)
 	target_link_libraries(wepp "ws2_32.lib")
 ENDIF()
-
-## Coverage for Wepp
-option(CODE_COVERAGE "Enable coverage reporting" OFF)
-if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  # Add required flags (GCC & LLVM/Clang)
-  target_compile_options(wepp INTERFACE
-    -O0        # no optimization
-    -g         # generate debug info
-    --coverage # sets all required flags
-  )
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
-    target_link_options(wepp INTERFACE --coverage)
-  else()
-    target_link_libraries(wepp INTERFACE --coverage)
-  endif()
-endif(CODE_COVERAGE)
 
 createSourceGroups("${wepp_src}" "${CMAKE_SOURCE_DIR}/source")
 createSourceGroups("${wepp_inc}" "${CMAKE_SOURCE_DIR}/include")
