@@ -21,7 +21,7 @@ script:
 
   # Run test
   - cd ../
-  - ./bin\wepp_test
+  - ./bin/wepp_test
 
   #- cd ../bin/
   #- valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./test
