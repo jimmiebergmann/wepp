@@ -12,17 +12,12 @@ endfunction(createSourceGroups)
 project (wepp)
 cmake_minimum_required(VERSION 2.8)
 
+option(CODE_COVERAGE "Enable coverage reporting" OFF)
+
 # C++11 enabled.
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-## Code coverage
-option(CODE_COVERAGE "Enable coverage reporting" OFF)
-if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
-endif(CODE_COVERAGE)
 
 # Warnings as errors
 if(MSVC)
@@ -69,6 +64,9 @@ set_target_properties( wepp
   RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
 )
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang") ## Code coverage
+  set_target_properties(wepp PROPERTIES COMPILE_FLAGS "--coverage -fprofile-arcs -ftest-coverage")
+endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
 install(FILES ${wepp_inc} DESTINATION "${CMAKE_SOURCE_DIR}/include") # Install library headers
 
@@ -113,6 +111,10 @@ set_target_properties( wepp_test
   RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
 )
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang") ## Code coverage
+  set_target_properties(wepp_test PROPERTIES COMPILE_FLAGS "--coverage -fprofile-arcs -ftest-coverage")
+endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+
 target_link_libraries(wepp_test gtest_main wepp)
 
 message("${CMAKE_SOURCE_DIR}")

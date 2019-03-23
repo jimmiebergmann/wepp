@@ -36,20 +36,13 @@ script:
 
   # Run test
   - ./../bin/wepp_test
-
-  #- cd ../bin/
   #- valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./test
 
 after_success:
-  - lcov --directory ./CMakeFiles/wepp.dir --capture --output-file coverage.info
-  # filter out system and extra files.
-  # To also not include test code in coverage add them with full path to the patterns: '*/tests/*'
+  - lcov --directory ./CMakeFiles/wepp.dir --capture --output-file coverage.info #Or remove '*/tests/*'
   - lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
-  # output coverage data for debugging (optional)
   - lcov --list coverage.info
-  # send report to codecov.io
   - bash <(curl -s https://codecov.io/bash)
-  #- codecov
 
 notifications:
   email: false
