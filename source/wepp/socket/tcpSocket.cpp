@@ -50,9 +50,19 @@ namespace Wepp
             return *this;
         }
 
-        int TcpSocket::receive(char * buffer, size_t size)
+        int TcpSocket::receive(char * buffer, const int length)
         {
-            return recv(m_handle, buffer, size, 0);
+            return ::recv(m_handle, buffer, length, 0);
+        }
+
+        int TcpSocket::send(const char * data, const int length)
+        {
+            return ::send(m_handle, data, length , 0);
+        }
+
+        int TcpSocket::send(const std::string & data)
+        {
+            return ::send(m_handle, data.c_str(), static_cast<int>(data.size()), 0);
         }
 
     }

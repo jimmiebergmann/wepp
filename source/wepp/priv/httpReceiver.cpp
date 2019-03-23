@@ -275,12 +275,8 @@ namespace Wepp
             m_buffer(m_bufferSize)
         { }
 
-        void HttpReceiver::setSocket(const std::shared_ptr<Socket::TcpSocket> socket)
-        {
-            m_socket = socket;
-        }
-
-        bool HttpReceiver::receive(Http::Request & request, Http::Response & response,
+        bool HttpReceiver::receive(std::shared_ptr<Socket::TcpSocket> socket,
+                                   Http::Request & request, Http::Response & response,
                                    std::function<bool(Http::Request &, Http::Response &)> onRequest,
                                    std::function<bool(Http::Request &, Http::Response &)> onHeaders)
         {
@@ -305,7 +301,7 @@ namespace Wepp
             // Parse request line.
             while(state == State::RequestLine)
             {
-                recvSize = m_buffer.receive(*m_socket);
+                recvSize = m_buffer.receive(*socket);
                 if (recvSize <= 0)
                 {
                     if (recvSize == -2)
@@ -359,12 +355,12 @@ namespace Wepp
                 auto foundHeaderLine = m_buffer.regexSearch(matches, findHeaderLineRegex, m_limitRequestLine);
                 if (foundHeaderLine == HttpReceiverBuffer::FindResult::ReachedMaxLength)
                 {
-                    response.status(Http::Status::BadRequest);
+                    response.status(Http::Status::RequestHeaderFieldsTooLarge);
                     return false;
                 }
                 else if (foundHeaderLine == HttpReceiverBuffer::FindResult::NotFound)
                 {
-                    recvSize = m_buffer.receive(*m_socket);
+                    recvSize = m_buffer.receive(*socket);
                     if (recvSize <= 0)
                     {
                         if (recvSize == -2)
@@ -445,7 +441,7 @@ namespace Wepp
                         break;
                     }
 
-                    recvSize = m_buffer.receive(*m_socket);
+                    recvSize = m_buffer.receive(*socket);
                     if (recvSize <= 0)
                     {
                         if (recvSize == -2)

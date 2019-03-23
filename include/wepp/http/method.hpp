@@ -67,7 +67,7 @@ namespace Wepp
         * @return Name of method given as parameter.
         *
         */
-        WEPP_API const std::string & getMethodName(const Method method);
+        WEPP_API const std::string & getMethodAsString(const Method method);
 
     }
 

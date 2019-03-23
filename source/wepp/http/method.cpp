@@ -31,14 +31,14 @@ namespace Wepp
     namespace Http
     {
 
-        static const std::string s_methodNames[] =
+        static const std::string s_methodStrings[] =
         {
             "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "OPTION", "CONNECT", "PATCH"
         };
 
-        const std::string & getMethodName(const Method method)
+        const std::string & getMethodAsString(const Method method)
         {
-            return s_methodNames[static_cast<size_t>(method)];
+            return s_methodStrings[static_cast<size_t>(method)];
         }
 
     }

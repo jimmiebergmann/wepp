@@ -132,12 +132,6 @@ namespace Wepp
                          const size_t limitHeaderFieldCount = 512, const size_t bufferSize = 131072);
 
             /**
-            * Set current socket of receiver. Must be called before receive, at least the first time.
-            *
-            */
-            void setSocket(const std::shared_ptr<Socket::TcpSocket> socket);
-
-            /**
             * Receive and parse data.
             *
             * The receive method internally uses two sets of buffers, used for swapping if one of them gets full.
@@ -149,13 +143,12 @@ namespace Wepp
             
             *
             */
-            bool receive(Http::Request & request, Http::Response & response,
+            bool receive(std::shared_ptr<Socket::TcpSocket> socket,
+                         Http::Request & request, Http::Response & response,
                          std::function<bool(Http::Request &, Http::Response &)> onRequest,
                          std::function<bool(Http::Request &, Http::Response &)> onHeaders);
 
         private:
-
-            std::shared_ptr<Socket::TcpSocket> m_socket;     /**< Socket, receiving data from.*/
 
             const size_t m_limitRequestLine;                 /**< .*/
             const size_t m_limitHeaderFieldLine;             /**< .*/

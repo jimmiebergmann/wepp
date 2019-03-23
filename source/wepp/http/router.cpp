@@ -56,7 +56,7 @@ namespace Wepp
 
         RouteMethod & Router::operator[](const Method method)
         {
-            return this->operator[](getMethodName(method).c_str());
+            return this->operator[](getMethodAsString(method).c_str());
         }
 
         RouteMethod & Router::operator[](const std::string & method)

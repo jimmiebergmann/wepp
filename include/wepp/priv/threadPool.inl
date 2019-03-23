@@ -89,6 +89,7 @@ namespace Wepp
         {
             execute(std::get<Is>(m_args)...);
             m_pool->returnWorker(this);
+            m_args = std::tuple<Args...>();
         }
 
         // ThreadPool implementations.

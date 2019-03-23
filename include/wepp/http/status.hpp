@@ -124,7 +124,7 @@ namespace Wepp
         * @return Name of method given as parameter.
         *
         */
-        //WEPP_API const std::string & getStatusName(const Status status);
+        WEPP_API const std::string & getStatusAsString(const Status status);
 
     }
 

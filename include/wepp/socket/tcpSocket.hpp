@@ -28,6 +28,7 @@
 
 #include "wepp/build.hpp"
 #include "wepp/socket/socket.hpp"
+#include <string>
 
 /**
 * Wepp namespace.
@@ -80,7 +81,14 @@ namespace Wepp
             * Receive data.
             *
             */
-            int receive(char * buffer, size_t size);
+            int receive(char * buffer, const int length);
+
+            /**
+            * Send data
+            *
+            */
+            int send(const char * data, const int length);
+            int send(const std::string & data);
 
         };
 
