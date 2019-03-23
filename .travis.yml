@@ -13,6 +13,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - valgrind
+      - lcov
 
 before_install:
   # C++14, even C++17
@@ -29,15 +30,24 @@ script:
   # Build
   - mkdir build
   - cd build
-  - cmake ..
-  - make
+  - cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug ..
+  - cmake --build . --config Debug
 
   # Run test
-  - cd ../
-  - ./bin/wepp_test
+  - ./../bin/wepp_test
 
   #- cd ../bin/
   #- valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./test
+
+after_success:
+  - lcov --directory ./CMakeFiles/wepp.dir --capture --output-file coverage.info
+  # filter out system and extra files.
+  # To also not include test code in coverage add them with full path to the patterns: '*/tests/*'
+  - lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
+  # output coverage data for debugging (optional)
+  - lcov --list coverage.info
+  # send report to codecov.io
+  bash <(curl -s https://codecov.io/bash)
 
 notifications:
   email: false

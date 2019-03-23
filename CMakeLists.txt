@@ -17,6 +17,12 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+## Code coverage
+option(CODE_COVERAGE "Enable coverage reporting" OFF)
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
+endif(CODE_COVERAGE)
 
 # Warnings as errors
 if(MSVC)
@@ -38,12 +44,14 @@ file(GLOB_RECURSE wepp_src "${CMAKE_SOURCE_DIR}/source/wepp/*.cpp")
 file(GLOB_RECURSE wepp_inc "${CMAKE_SOURCE_DIR}/include/wepp/*.hpp" "${CMAKE_SOURCE_DIR}/include/wepp/*.inl")
 file(GLOB wepp_files ${wepp_src} ${wepp_inc})
 
+
 # Wepp
 include_directories ("${CMAKE_SOURCE_DIR}/include") # Include header files
 add_library(wepp SHARED ${wepp_files}) # Create shared library
 IF (WIN32)
 	target_link_libraries(wepp "ws2_32.lib")
 ENDIF()
+
 createSourceGroups("${wepp_src}" "${CMAKE_SOURCE_DIR}/source")
 createSourceGroups("${wepp_inc}" "${CMAKE_SOURCE_DIR}/include")
 
