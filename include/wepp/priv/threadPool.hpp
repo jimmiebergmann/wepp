@@ -55,7 +55,7 @@ namespace Wepp
         class ThreadPoolBase;
 
         /**
-        * Thread pool worker, used for inheritance to implement custom thread pool logics. 
+        * Thread pool worker, used for inheritance to implement custom thread pool logics.
         *
         * @tparam Args  - Arguments of execute function.
         *
@@ -111,7 +111,7 @@ namespace Wepp
             ThreadPoolBase<Args...> *   m_pool;
 
         };
-        
+
 
         /**
         * base class of thread pool worker.
@@ -122,8 +122,6 @@ namespace Wepp
         {
 
         public:
-
-            typedef ThreadWorker<Args...> Worker;
 
             /**
             * Returning worker to thread pool.
@@ -141,7 +139,7 @@ namespace Wepp
         * Any allocated resource is owned and handled by this class.
         *
         * @tparam T     - Type of worker, must inherit from ThreadWorker.
-        * @tparam Args  - Arguments of enqueue function, passed worker's execute function. 
+        * @tparam Args  - Arguments of enqueue function, passed worker's execute function.
         *
         */
         template<typename T, typename ... Args>
@@ -149,6 +147,8 @@ namespace Wepp
         {
 
         public:
+
+            typedef ThreadWorker<Args...> Worker;
 
             /**
             * Default constructor.
@@ -174,7 +174,7 @@ namespace Wepp
             */
             template<typename ... CArgs>
             Task<> start(const size_t minWorkers, const size_t maxWorkers, CArgs ... cargs);
-            
+
             /**
             * Stop the thead pool.
             *
@@ -224,7 +224,7 @@ namespace Wepp
             TaskController<>        m_stoppedTask;          /**< Task controller for indicating completion of pool stoppage.*/
             std::thread             m_thread;               /**< Thread distrubuting work and [de]/allocating workers. */
             std::mutex              m_mutex;                /**< Mutex protecting the queue/set containers. */
-            
+
             std::set<Worker *>      m_workerSet;            /**< Set of allocated workers.*/
             std::queue<Worker *>    m_workerQueue;          /**< Queue of available workers.*/
             std::queue<Work>        m_workQueue;            /**< Queue of enqueued worke.*/

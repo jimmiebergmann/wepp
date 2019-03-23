@@ -27,6 +27,7 @@
 #define WEPP_SOCKET_SOCKET_HPP
 
 #include "wepp/build.hpp"
+#include "wepp/socket/platform/socketHeaders.hpp"
 
 /**
 * Wepp namespace.
@@ -51,7 +52,15 @@ namespace Wepp
 
         public:
 
-            typedef SOCKET Handle; /**< Handle type. */
+            /**
+            * Handle type.
+            *
+            */
+            #if defined(WEPP_PLATFORM_WINDOWS)
+                typedef SOCKET Handle;
+            #elif defined(WEPP_PLATFORM_LINUX)
+                typedef int Handle;
+            #endif
 
             /**
             * Constructor.
@@ -91,7 +100,7 @@ namespace Wepp
 
         protected:
 
-            
+
 
             Handle m_handle;
 

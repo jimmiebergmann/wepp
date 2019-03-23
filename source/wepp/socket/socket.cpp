@@ -24,7 +24,9 @@
 */
 
 #include "wepp/socket/socket.hpp"
+#include "wepp/socket/platform/socketFunctions.hpp"
 #include <iostream>
+
 
 namespace Wepp
 {
@@ -44,7 +46,7 @@ namespace Wepp
         {
             if (m_handle)
             {
-                closesocket(m_handle);
+                WEPP_CLOSE_SOCKET(m_handle);
             }
         }
 
@@ -69,7 +71,7 @@ namespace Wepp
         }
 
 
-        
+
 
         // Intiialize winsock.
         #if defined(WEPP_PLATFORM_WINDOWS)

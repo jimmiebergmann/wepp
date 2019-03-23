@@ -23,51 +23,19 @@
 *
 */
 
-#ifndef WEPP_BUILD_HPP
-#define WEPP_BUILD_HPP
+#ifndef WEPP_SOCKET_PLATFORM_SOCKET_FUNCTIONS_HPP
+#define WEPP_SOCKET_PLATFORM_SOCKET_FUNCTIONS_HPP
 
-// Platforms
-
-// Win32
-#if defined( _WIN32 ) || defined( __WIN32__ ) || defined( _WIN64 ) || defined( __WIN64__ )
-    #define WEPP_PLATFORM_WINDOWS
-
-    #if defined (_MSC_VER)
-        #pragma comment(lib, "ws2_32.lib")
-    #endif
-// Linux
-#elif defined( linux ) || defined( __linux )
-    #define WEPP_PLATFORM_LINUX
-#else
-    #error Unkown platform.
-#endif
-
-// Build type
-#if defined( NDEBUG ) || !defined( _DEBUG )
-    #define WEPP_BUILD_RELEASE
-#else
-    #define WEPP_BUILD_DEBUG
-#endif
-
-
-#if !defined(WEPP_STATIC)
-    // Turn off microsoft STL vsc warning
-    #ifdef _MSC_VER
-        #pragma warning(disable : 4251)
-    #endif
-
-    // Define as export or import, if FLARE_EXPORTS is defined.
-    #if defined(WEPP_PLATFORM_WINDOWS)
-        #if defined(WEPP_EXPORTS)
-            #define WEPP_API __declspec(dllexport)
-        #else
-            #define WEPP_API __declspec(dllimport)
-        #endif
-    #else
-        #define WEPP_API
-    #endif
-#else
-    #define WEPP_API
+#if defined(WEPP_PLATFORM_WINDOWS)
+    #define WEPP_IS_SOCKET_VALID(socket) (socket != INVALID_SOCKET)
+    #define WEPP_IS_SOCKET_INVALID(socket) (socket == INVALID_SOCKET)
+    #define WEPP_SOCKADDR_TYPE SOCKADDR
+    #define WEPP_CLOSE_SOCKET(socket) closesocket(socket)
+#elif defined(WEPP_PLATFORM_LINUX)
+    #define WEPP_IS_SOCKET_VALID(socket) (socket >= 0)
+    #define WEPP_IS_SOCKET_INVALID(socket) (socket < 0)
+    #define WEPP_SOCKADDR_TYPE sockaddr
+    #define WEPP_CLOSE_SOCKET(socket) close(socket)
 #endif
 
 

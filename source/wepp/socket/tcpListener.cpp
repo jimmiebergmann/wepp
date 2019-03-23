@@ -24,6 +24,7 @@
 */
 
 #include "wepp/socket/tcpListener.hpp"
+#include "wepp/socket/platform/socketFunctions.hpp"
 #include <iostream>
 
 namespace Wepp
@@ -63,24 +64,23 @@ namespace Wepp
             {
                 // Create listen socket.
                 m_handle = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-                if (m_handle == INVALID_SOCKET)
+                if(WEPP_IS_SOCKET_INVALID(m_handle))
                 {
                     //std::cerr << "socket function failed with error: " << Socket::getLastError() << std::endl;
                     m_handle = 0;
                     stopListen();
                     return;
                 }
-                
+
                 // Bind listen socket.
                 sockaddr_in service;
                 service.sin_family = AF_INET;
                 unsigned long addr = 0; // MUST AT LEAST BE ABLE TO HOLD in_addr.
-                InetPton(AF_INET, address.c_str(), &addr);
-                service.sin_addr.s_addr = addr; //inet_addr(address.c_str()); // DEPRECIATED! Use:    int inet_pton(int af, const char *src, void *dst);
+                //InetPton(AF_INET, address.c_str(), &addr);
+                service.sin_addr.s_addr = htonl( INADDR_ANY );//addr; //inet_addr(address.c_str()); // DEPRECIATED! Use:    int inet_pton(int af, const char *src, void *dst);
                 service.sin_port = htons(port);
 
-                int result = ::bind(m_handle, (SOCKADDR *)& service, sizeof(service));
-                if (result == SOCKET_ERROR)
+                if(::bind(m_handle, reinterpret_cast<const WEPP_SOCKADDR_TYPE *>(&service), sizeof( service ) ) != 0 )
                 {
                     // std::cerr << "bind function failed with error: " << Socket::getLastError() << std::endl;
                     stopListen();
@@ -99,22 +99,22 @@ namespace Wepp
                     }
 
                     // Listen for incoming socket.
-                    if (::listen(m_handle, SOMAXCONN) == SOCKET_ERROR)
+                    if (::listen(m_handle, SOMAXCONN) != 0)
                     {
                         //std::cerr << "listen function failed with error: " << Socket::getLastError() << std::endl;
                         stopListen();
                         return;
                     }
- 
+
                     // Accept the connection.
                     Socket::Handle connection = ::accept(m_handle, NULL, NULL);
-                    if (connection == INVALID_SOCKET || !m_running)
+                    if (WEPP_IS_SOCKET_INVALID(connection) || !m_running)
                     {
                         //std::cerr << "accept failed with error: " << Socket::getLastError() << std::endl;
                         stopListen();
                         return;
                     }
-                    
+
                     // Set native handle of task.
                     {
                         std::lock_guard<std::mutex> lock(m_mutex);
@@ -127,7 +127,7 @@ namespace Wepp
                     }
 
                 }
-               
+
             });
 
             return task;
@@ -145,10 +145,10 @@ namespace Wepp
 
             if (m_handle)
             {
-                closesocket(m_handle);
+                WEPP_CLOSE_SOCKET(m_handle);
                 m_handle = 0;
             }
-            
+
             m_listenSempahore.notifyOne();
             return m_stopTask;
         }
@@ -172,11 +172,11 @@ namespace Wepp
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 
-            m_running = false; 
-            
+            m_running = false;
+
             if (m_handle)
             {
-                closesocket(m_handle);
+                WEPP_CLOSE_SOCKET(m_handle);
                 m_handle = 0;
             }
 

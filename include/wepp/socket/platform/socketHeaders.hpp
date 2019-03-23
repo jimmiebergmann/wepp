@@ -23,52 +23,29 @@
 *
 */
 
-#ifndef WEPP_BUILD_HPP
-#define WEPP_BUILD_HPP
+#ifndef WEPP_SOCKET_PLATFORM_SOCKET_HEADERS_HPP
+#define WEPP_SOCKET_PLATFORM_SOCKET_HEADERS_HPP
 
-// Platforms
+#include "wepp/build.hpp"
 
-// Win32
-#if defined( _WIN32 ) || defined( __WIN32__ ) || defined( _WIN64 ) || defined( __WIN64__ )
-    #define WEPP_PLATFORM_WINDOWS
-
-    #if defined (_MSC_VER)
-        #pragma comment(lib, "ws2_32.lib")
+#if defined(WEPP_PLATFORM_WINDOWS)
+    #include <WinSock2.h>
+    #include <ws2tcpip.h>
+    #include <Windows.h>
+    #ifdef max
+        #undef max
     #endif
-// Linux
-#elif defined( linux ) || defined( __linux )
-    #define WEPP_PLATFORM_LINUX
-#else
-    #error Unkown platform.
-#endif
-
-// Build type
-#if defined( NDEBUG ) || !defined( _DEBUG )
-    #define WEPP_BUILD_RELEASE
-#else
-    #define WEPP_BUILD_DEBUG
-#endif
-
-
-#if !defined(WEPP_STATIC)
-    // Turn off microsoft STL vsc warning
-    #ifdef _MSC_VER
-        #pragma warning(disable : 4251)
+    #ifdef min
+        #undef min
     #endif
-
-    // Define as export or import, if FLARE_EXPORTS is defined.
-    #if defined(WEPP_PLATFORM_WINDOWS)
-        #if defined(WEPP_EXPORTS)
-            #define WEPP_API __declspec(dllexport)
-        #else
-            #define WEPP_API __declspec(dllimport)
-        #endif
-    #else
-        #define WEPP_API
-    #endif
-#else
-    #define WEPP_API
+#elif defined(WEPP_PLATFORM_LINUX)
+    #include <unistd.h>
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <fcntl.h>
+    #include <netdb.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
 #endif
-
 
 #endif
