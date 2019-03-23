@@ -1,0 +1,30 @@
+language:
+  - cpp
+
+compiler:
+  - gcc
+  - clang
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - valgrind
+
+script:
+  # Build
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+
+  # Run test
+  - cd ../
+  - ./bin\wepp_test
+
+  #- cd ../bin/
+  #- valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./test
+
+notifications:
+  email: false
