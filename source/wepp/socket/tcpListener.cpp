@@ -97,6 +97,14 @@ namespace Wepp
                     return;
                 }
 
+                if (::listen(m_handle, SOMAXCONN) != 0)
+                {
+                    //std::cerr << "Listen function failed with error: " << Socket::getLastError() << std::endl;
+                    stopListen();
+                    task.fail();
+                    return;
+                }
+
                 task.finish();
 
                 while (m_running)
@@ -120,12 +128,6 @@ namespace Wepp
                         listenHandle = m_handle;
                     }
 
-                    if (::listen(listenHandle, SOMAXCONN) != 0)
-                    {
-                        //std::cerr << "Listen function failed with error: " << Socket::getLastError() << std::endl;
-                        break;
-                    }
-
                     // Accept the connection.
                     Socket::Handle connection = ::accept(listenHandle, NULL, NULL);
                     if (WeppIsSocketInvalid(connection) || !m_running)
@@ -137,8 +139,7 @@ namespace Wepp
                             break;
                         }
 
-                        std::cerr << "accept failed with error: " << Socket::getLastError() << std::endl;
-
+                        //std::cerr << "accept failed with error: " << Socket::getLastError() << std::endl;
                         continue;
                     }
 
