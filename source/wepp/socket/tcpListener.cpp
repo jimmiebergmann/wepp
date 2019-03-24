@@ -115,8 +115,8 @@ namespace Wepp
                         break;
                     }
 
-
-                    Handle listenHandle;
+                    // Store handler.
+                    Handle listenHandler;
                     {
                         std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -125,15 +125,16 @@ namespace Wepp
                             break;
                         }
 
-                        listenHandle = m_handle;
+                        listenHandler = m_handle;
                     }
 
                     // Accept the connection.
-                    Socket::Handle connection = ::accept(listenHandle, NULL, NULL);
+                    Socket::Handle connection = ::accept(listenHandler, NULL, NULL);
                     if (WeppIsSocketInvalid(connection) || !m_running)
                     {
                         std::lock_guard<std::mutex> lock(m_mutex);
 
+                        // Stop() were called.
                         if(!m_running)
                         {
                             break;
@@ -151,7 +152,6 @@ namespace Wepp
                         m_listenQueue.pop();
                         connTask() = std::make_shared<TcpSocket>(connection);
                         connTask.finish();
-                        std::this_thread::yield();
                     }
                 }
 

@@ -79,9 +79,8 @@ namespace Wepp
             {
                 #if defined(WEPP_PLATFORM_WINDOWS)
 
-                    u_long blocking = p_Blocking ? 0 : 1;
+                    u_long blocking = status ? 0 : 1;
 
-                    int result = ;
                     if (ioctlsocket(m_handle, FIONBIO, &blocking) != 0)
                     {
                         //std::cerr << "Setting blocking failed with error: " << Socket::getLastError() << std::endl;
