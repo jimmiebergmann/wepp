@@ -44,7 +44,7 @@ namespace Wepp
             m_currentPointer(m_buffer.get()),
             m_newlinePointer(nullptr),
             m_lastFindnewlinePointer(nullptr),
-            m_newlineResult(HttpReceiverBuffer::FindResult::NotFound)
+            m_newlineResult(HttpReceiverBuffer::FindResult::NewlineNotFound)
         {
             if (size == 0)
             {
@@ -60,7 +60,7 @@ namespace Wepp
             m_currentPointer = m_buffer.get();
             m_newlinePointer = nullptr;
             m_lastFindnewlinePointer = nullptr;
-            m_newlineResult = HttpReceiverBuffer::FindResult::NotFound;
+            m_newlineResult = HttpReceiverBuffer::FindResult::NewlineNotFound;
         }
 
         size_t HttpReceiverBuffer::size() const
@@ -123,7 +123,7 @@ namespace Wepp
 
             m_currentPointer = m_newlinePointer + 2;
             m_newlinePointer = nullptr;
-            m_newlineResult = FindResult::NotFound;
+            m_newlineResult = FindResult::NewlineNotFound;
 
             return FindResult::Found;
         }
@@ -142,12 +142,12 @@ namespace Wepp
 
             if (std::regex_search(static_cast<const char *>(m_currentPointer), static_cast<const char *>(m_newlinePointer), matches, regex) == false)
             {
-                return FindResult::NotFound;
+                return FindResult::RegexNotFound;
             }
 
             m_currentPointer = m_newlinePointer + 2;
             m_newlinePointer = nullptr;
-            m_newlineResult = FindResult::NotFound;
+            m_newlineResult = FindResult::NewlineNotFound;
 
             return FindResult::Found;
         }
@@ -157,12 +157,12 @@ namespace Wepp
             if (static_cast<size_t>(m_bufferEndPointer - m_currentPointer) < 2 ||
                 *m_currentPointer != '\r' || *(m_currentPointer + 1) != '\n')
             {
-                return FindResult::NotFound;
+                return FindResult::NewlineNotFound;
             }
 
             m_currentPointer += 2;
             m_newlinePointer = nullptr;
-            m_newlineResult = FindResult::NotFound;
+            m_newlineResult = FindResult::NewlineNotFound;
 
             return FindResult::Found;
         }
@@ -185,13 +185,13 @@ namespace Wepp
             if (foundPos == findTo)
             {
                 m_lastFindnewlinePointer = foundPos;
-                m_newlineResult = useMaxLength ? FindResult::ReachedMaxLength : FindResult::NotFound;
+                m_newlineResult = useMaxLength ? FindResult::ReachedMaxLength : FindResult::NewlineNotFound;
                 return;
             }
             else if(*(foundPos + 1) != '\n')
             {
                 m_lastFindnewlinePointer = foundPos;
-                m_newlineResult = FindResult::NotFound;
+                m_newlineResult = FindResult::NewlineNotFound;
                 return;
             }
 
@@ -319,7 +319,12 @@ namespace Wepp
                     response.status(Http::Status::UriTooLong);
                     return Status::PeerError;
                 }
-                else if (foundRequestLine == HttpReceiverBuffer::FindResult::NotFound)
+                else if (foundRequestLine == HttpReceiverBuffer::FindResult::RegexNotFound)
+                {
+                    response.status(Http::Status::BadRequest);
+                    return Status::PeerError;
+                }
+                else if (foundRequestLine == HttpReceiverBuffer::FindResult::NewlineNotFound)
                 {
                     continue;
                 }
@@ -357,7 +362,12 @@ namespace Wepp
                     response.status(Http::Status::RequestHeaderFieldsTooLarge);
                     return Status::PeerError;
                 }
-                else if (foundHeaderLine == HttpReceiverBuffer::FindResult::NotFound)
+                else if (foundHeaderLine == HttpReceiverBuffer::FindResult::RegexNotFound)
+                {
+                    response.status(Http::Status::BadRequest);
+                    return Status::PeerError;
+                }
+                else if (foundHeaderLine == HttpReceiverBuffer::FindResult::NewlineNotFound)
                 {
                     recvSize = m_buffer.receive(*socket);
                     if (recvSize == 0)

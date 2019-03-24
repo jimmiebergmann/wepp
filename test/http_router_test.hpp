@@ -52,55 +52,66 @@ TEST(Http_Router, Method)
             EXPECT_EQ(router.methodCount(), size_t(0));
 
             size_t count = 0;
+            size_t tmp = count;
             for (size_t i = 0; i < 3; i++)
             {
                 auto & method1 = router["Get"];
-                count = std::min<size_t>(++count, size_t(10));
+                tmp = std::min<size_t>(++count, size_t(10));
+                count = tmp;
                 EXPECT_EQ(router.methodCount(), count);
                 EXPECT_STREQ(method1.name().c_str(),  "GET");
 
                 auto & method2 = router["hEad"];
-                count = std::min<size_t>(++count, size_t(10));
+                tmp = std::min<size_t>(++count, size_t(10));
+                count = tmp;
                 EXPECT_EQ(router.methodCount(), count);
                 EXPECT_STREQ(method2.name().c_str(),  "HEAD");
 
                 auto & method3 = router["poSt"];
-                count = std::min<size_t>(++count, size_t(10));
+                tmp = std::min<size_t>(++count, size_t(10));
+                count = tmp;
                 EXPECT_EQ(router.methodCount(), count);
                 EXPECT_STREQ(method3.name().c_str(),  "POST");
 
                 auto & method4 = router["puT"];
-                count = std::min<size_t>(++count, size_t(10));
+                tmp = std::min<size_t>(++count, size_t(10));
+                count = tmp;
                 EXPECT_EQ(router.methodCount(), count);
                 EXPECT_STREQ(method4.name().c_str(),  "PUT");
 
                 auto & method5 = router["Delete"];
-                count = std::min<size_t>(++count, size_t(10));
+                tmp = std::min<size_t>(++count, size_t(10));
+                count = tmp;
                 EXPECT_EQ(router.methodCount(), count);
                 EXPECT_STREQ(method5.name().c_str(),  "DELETE");
 
                 auto & method6 = router["tRace"];
-                count = std::min<size_t>(++count, size_t(10));
+                tmp = std::min<size_t>(++count, size_t(10));
+                count = tmp;
                 EXPECT_EQ(router.methodCount(), count);
                 EXPECT_STREQ(method6.name().c_str(),  "TRACE");
 
                 auto & method7 = router["opTion"];
-                count = std::min<size_t>(++count, size_t(10));
+                tmp = std::min<size_t>(++count, size_t(10));
+                count = tmp;
                 EXPECT_EQ(router.methodCount(), count);
                 EXPECT_STREQ(method7.name().c_str(),  "OPTION");
 
                 auto & method8 = router["CONNECT"];
-                count = std::min<size_t>(++count, size_t(10));
+                tmp = std::min<size_t>(++count, size_t(10));
+                count = tmp;
                 EXPECT_EQ(router.methodCount(), count);
                 EXPECT_STREQ(method8.name().c_str(),  "CONNECT");
 
                 auto & method9 = router["PATCH"];
-                count = std::min<size_t>(++count, size_t(10));
+                tmp = std::min<size_t>(++count, size_t(10));
+                count = tmp;
                 EXPECT_EQ(router.methodCount(), count);
                 EXPECT_STREQ(method9.name().c_str(),  "PATCH");
 
                 auto & methodPost10 = router["fubar"];
-                count = std::min<size_t>(++count, size_t(10));
+                tmp = std::min<size_t>(++count, size_t(10));
+                count = tmp;
                 EXPECT_EQ(router.methodCount(), count);
                 EXPECT_STREQ(methodPost10.name().c_str(),  "FUBAR");
             }

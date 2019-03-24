@@ -56,7 +56,8 @@ namespace Wepp
             enum class FindResult
             {
                 Found,
-                NotFound,
+                NewlineNotFound,
+                RegexNotFound,
                 ReachedMaxLength
             };
 

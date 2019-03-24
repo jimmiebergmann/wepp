@@ -5,6 +5,8 @@
 #include "task_test.hpp"
 #include "http_method_test.hpp"
 #include "http_router_test.hpp"
+#include "http_request_test.hpp"
+#include "http_response_test.hpp"
 //#include "http_server_test.hpp"
 
 int main(int argc, char ** argv)

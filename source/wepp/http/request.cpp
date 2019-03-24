@@ -85,6 +85,12 @@ namespace Wepp
             return *this;
         }
 
+        Request & Request::version(const std::string & version)
+        {
+            m_version = version;
+            return *this;
+        }
+
     }
 
 }

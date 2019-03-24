@@ -66,13 +66,17 @@ namespace Wepp
             */
             Request();
 
+            /**
+            * Get method.
+            *
+            */
             const std::string & method() const;
 
             /**
             * Get resouce.
             *
             */
-            const std::string & resource() const;
+            const std::string & resource() const;           
 
             /**
             * Get version.
@@ -106,6 +110,8 @@ namespace Wepp
 
             /**
             * Set method.
+            * 
+            * @param[in] method - Input method name. Lowercase letters are converted to uppercase.
             *
             */
             Request & method(const std::string & method);
@@ -115,6 +121,12 @@ namespace Wepp
             *
             */
             Request & resource(const std::string & resource);
+
+            /**
+            * Set version.
+            *
+            */
+            Request & version(const std::string & version);
 
         private:
 

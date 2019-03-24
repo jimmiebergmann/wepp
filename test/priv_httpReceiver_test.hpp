@@ -44,7 +44,7 @@ TEST(Http_HttpReceiverBuffer, ReceiveString)
         EXPECT_EQ(buffer.readLine(output), Priv::HttpReceiverBuffer::FindResult::Found);
         EXPECT_STREQ(output.c_str(), "hello world");
 
-        EXPECT_EQ(buffer.readLine(output), Priv::HttpReceiverBuffer::FindResult::NotFound);
+        EXPECT_EQ(buffer.readLine(output), Priv::HttpReceiverBuffer::FindResult::NewlineNotFound);
     }
 }
 
@@ -61,7 +61,7 @@ TEST(Http_HttpReceiverBuffer, Newline)
         EXPECT_TRUE(buffer.receive(" bar"));
         EXPECT_EQ(buffer.unreadBytes(), size_t(7));
         
-        EXPECT_EQ(buffer.readLine(output), Priv::HttpReceiverBuffer::FindResult::NotFound);
+        EXPECT_EQ(buffer.readLine(output), Priv::HttpReceiverBuffer::FindResult::NewlineNotFound);
         EXPECT_EQ(buffer.unreadBytes(), size_t(7));
         EXPECT_STRNE(output.c_str(), "foo bar");
 
@@ -79,7 +79,7 @@ TEST(Http_HttpReceiverBuffer, Newline)
 
         EXPECT_FALSE(buffer.receive("\r\n"));
         EXPECT_EQ(buffer.unreadBytes(), size_t(0));
-        EXPECT_EQ(buffer.readNewline(), Priv::HttpReceiverBuffer::FindResult::NotFound);
+        EXPECT_EQ(buffer.readNewline(), Priv::HttpReceiverBuffer::FindResult::NewlineNotFound);
         EXPECT_EQ(buffer.unreadBytes(), size_t(0));
     }
     {
@@ -116,7 +116,7 @@ TEST(Http_HttpReceiverBuffer, Newline)
         EXPECT_EQ(buffer.unreadBytes(), size_t(2));
         EXPECT_EQ(buffer.readNewline(), Priv::HttpReceiverBuffer::FindResult::Found);
         EXPECT_EQ(buffer.unreadBytes(), size_t(0));
-        EXPECT_EQ(buffer.readNewline(), Priv::HttpReceiverBuffer::FindResult::NotFound);
+        EXPECT_EQ(buffer.readNewline(), Priv::HttpReceiverBuffer::FindResult::NewlineNotFound);
         EXPECT_EQ(buffer.unreadBytes(), size_t(0));
     }
 }
