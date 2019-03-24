@@ -100,22 +100,25 @@ namespace Wepp
                         callbackFunction(request, response);
                     }
 
-                    // Send response
-                    std::string dummyResponse =
-                                     "HTTP/1.1 ";
-                    dummyResponse += std::to_string(static_cast<unsigned long long>(response.status()));
-                    dummyResponse += " " + getStatusAsString(response.status());
-                    dummyResponse += "\r\n";
+                    if (status != Priv::HttpReceiver::Status::Disconnected)
+                    {
+                        // Send response
+                        std::string dummyResponse =
+                            "HTTP/1.1 ";
+                        dummyResponse += std::to_string(static_cast<unsigned long long>(response.status()));
+                        dummyResponse += " " + getStatusAsString(response.status());
+                        dummyResponse += "\r\n";
 
                         //"Date: Sun, 18 Oct 2012 10:36:20 GMT\r\n"
-                    dummyResponse +=
-                        "Server: Wepp\r\n"
-                        "Content-Length: 7\r\n"
-                        "Connection: Closed\r\n\r\n"
-                        "foo bar";
-                    // "Content-Type: text/html\r\n";
+                        dummyResponse +=
+                            "Server: Wepp\r\n"
+                            "Content-Length: 7\r\n"
+                            "Connection: Closed\r\n\r\n"
+                            "foo bar";
+                        // "Content-Type: text/html\r\n";
 
-                    socket->send(dummyResponse);
+                        socket->send(dummyResponse);
+                    }
 
                 }).wait();
 
