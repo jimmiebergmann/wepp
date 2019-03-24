@@ -103,21 +103,20 @@ namespace Wepp
                     if (status != Priv::HttpReceiver::Status::Disconnected)
                     {
                         // Send response
-                        std::string dummyResponse =
+                        auto & body = response.body();
+
+                        std::string responseStart =
                             "HTTP/1.1 ";
-                        dummyResponse += std::to_string(static_cast<unsigned long long>(response.status()));
-                        dummyResponse += " " + getStatusAsString(response.status());
-                        dummyResponse += "\r\n";
-
-                        //"Date: Sun, 18 Oct 2012 10:36:20 GMT\r\n"
-                        dummyResponse +=
+                        responseStart += std::to_string(static_cast<unsigned long long>(response.status()));
+                        responseStart += " " + getStatusAsString(response.status());
+                        responseStart += "\r\n";
+                        responseStart +=
                             "Server: Wepp\r\n"
-                            "Content-Length: 7\r\n"
-                            "Connection: Closed\r\n\r\n"
-                            "foo bar";
-                        // "Content-Type: text/html\r\n";
-
-                        socket->send(dummyResponse);
+                            "Content-Length: " + std::to_string(body.size()) + "\r\n"
+                            "Connection: Closed\r\n\r\n";
+                         
+                        socket->send(responseStart);
+                        socket->send(body.data(), body.size());
                     }
 
                 }).wait();

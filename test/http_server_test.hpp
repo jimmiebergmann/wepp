@@ -23,7 +23,7 @@ TEST(Server, Route)
         Http::Server server;
         Semaphore sem1, sem2;
 
-        server.route["GET"]["/work/employe/<[\\w ]*>"] = [&sem1](const Http::Request & request, Http::Response & /*response*/)
+        server.route["GET"]["/work/employe/<[\\w ]*>"] = [&sem1](const Http::Request & request, Http::Response & response)
         {
             std::cout << "Received " << request.method() << " request." << std::endl;
             std::cout << "Resource: " << request.resource() << std::endl;;
@@ -39,6 +39,8 @@ TEST(Server, Route)
             {
                 std::cout << std::string(request.body().data(), request.body().size()) << std::endl;
             }
+            
+            response << request.resource();
 
             sem1.notifyOne();
         };

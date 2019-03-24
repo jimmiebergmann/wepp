@@ -28,6 +28,7 @@
 
 #include "wepp/build.hpp"
 #include "wepp/http/status.hpp"
+#include "wepp/http/body.hpp"
 
 /**
 * Wepp namespace.
@@ -70,9 +71,28 @@ namespace Wepp
             */
             Response & status(const Status status);
 
+            /**
+            * Get body.
+            *
+            */
+            const Body & body() const;
+
+            /**
+            * Get const body.
+            *
+            */
+            Body & body();
+
+            /**
+            * Body appending.
+            *
+            */
+            Response & operator <<(const std::string & string);
+
         private:
 
-            Status m_status;
+            Status  m_status;   /**< Status of response. */
+            Body    m_body;     /**< Body of response. */
 
         };
 

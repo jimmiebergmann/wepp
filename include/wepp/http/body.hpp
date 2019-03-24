@@ -111,16 +111,6 @@ namespace Wepp
             }
 
             /**
-            * Incremental assignment operator by std::string.
-            *
-            */
-            Body & operator +=(const std::string & string)
-            {
-                std::copy(string.begin(), string.end(), std::back_inserter<std::vector<char> >(m_data));
-                return *this;
-            }
-
-            /**
             * Input steaming operator.
             *
             */

@@ -46,6 +46,22 @@ namespace Wepp
             return *this;
         }
 
+        const Body & Response::body() const
+        {
+            return m_body;
+        }
+
+        Body & Response::body()
+        {
+            return m_body;
+        }
+
+        Response & Response::operator <<(const std::string & string)
+        {
+            m_body << string;
+            return *this;
+        }
+
     }
 
 }
