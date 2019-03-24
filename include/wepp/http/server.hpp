@@ -82,7 +82,7 @@ namespace Wepp
             * Asynchronous function for starting the server.
             *
             */
-            Task<> start(const unsigned short port, const std::string & endpoint = "");
+            Task<> start(const uint16_t port, const std::string & endpoint = "");
 
             /**
             * Asynchronous function for stopping the server.

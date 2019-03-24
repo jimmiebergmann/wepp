@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include <vector>
+#include "wepp/socket/socket.hpp"
 #include "wepp/task.hpp"
 #include <thread>
 
@@ -240,6 +240,8 @@ TEST(Task, Wait)
             std::cout << "Info: " << elapsed.count() << "  4s sleep, 2s timeout.";
             EXPECT_EQ(task.status(), TaskStatus::Pending);
             EXPECT_EQ(task(), 404);
-        }      
+        } 
+
+        Socket::Socket::setLastError(0);
     }
 }

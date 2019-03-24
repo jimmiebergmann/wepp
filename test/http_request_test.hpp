@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include <vector>
 #include "wepp/http/request.hpp"
 
 using namespace Wepp;

@@ -28,6 +28,7 @@
 
 #include "wepp/build.hpp"
 #include "wepp/socket/socket.hpp"
+#include "wepp/task.hpp"
 #include <string>
 
 /**
@@ -76,6 +77,12 @@ namespace Wepp
             *
             */
             TcpSocket & operator = (const Handle & handle);
+
+            /**
+            * Connect to host.
+            *
+            */
+            bool connect(const std::string & endpoint, const uint16_t port);
 
             /**
             * Receive data.

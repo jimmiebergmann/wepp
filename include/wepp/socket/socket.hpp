@@ -87,6 +87,12 @@ namespace Wepp
             static int getLastError();
 
             /**
+            * Set latest native error.
+            *
+            */
+            static void setLastError(const int error);
+
+            /**
             * Get the native handle.
             *
             */
@@ -100,8 +106,10 @@ namespace Wepp
 
         protected:
 
-
-
+            /**
+            * Handle of native socket descriptor.
+            *
+            */
             Handle m_handle;
 
         };

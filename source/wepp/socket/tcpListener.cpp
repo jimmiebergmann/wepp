@@ -63,8 +63,8 @@ namespace Wepp
             m_listenThread = std::thread([this, task, port, endpoint]() mutable
             {
                 // Get address as integer.
-                uint32_t endpintAddr = htonl(INADDR_ANY);
-                if(endpoint.size() && inet_pton(AF_INET, endpoint.c_str(), &endpintAddr) != 1)
+                uint32_t endpointAddr = htonl(INADDR_ANY);
+                if(endpoint.size() && inet_pton(AF_INET, endpoint.c_str(), &endpointAddr) != 1)
                 {
                     //std::cerr << "Invalid ip address: " << address << " - error: " << Socket::getLastError() << std::endl;
                     stopListen();
@@ -76,7 +76,7 @@ namespace Wepp
                 m_handle = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
                 if(WeppIsSocketInvalid(m_handle))
                 {
-                    //std::cerr << "socket function failed with error: " << Socket::getLastError() << std::endl;
+                    //std::cerr << "Socket creation failed with error: " << Socket::getLastError() << std::endl;
                     m_handle = 0;
                     stopListen();
                     task.fail();
@@ -85,7 +85,7 @@ namespace Wepp
                 // Bind listen socket.
                 sockaddr_in service;
                 service.sin_family = AF_INET;
-                service.sin_addr.s_addr = endpintAddr;
+                service.sin_addr.s_addr = endpointAddr;
                 service.sin_port = htons(port);
 
                 int ret = 0;

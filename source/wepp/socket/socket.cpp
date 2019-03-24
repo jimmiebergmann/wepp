@@ -53,9 +53,18 @@ namespace Wepp
         int Socket::getLastError()
         {
         #if defined(WEPP_PLATFORM_WINDOWS)
-            return WSAGetLastError();
+            return ::WSAGetLastError();
         #elif defined(WEPP_PLATFORM_LINUX)
             return errno;
+        #endif
+        }
+
+        void Socket::setLastError(const int error)
+        {
+        #if defined(WEPP_PLATFORM_WINDOWS)
+            ::WSASetLastError(error);
+        #elif defined(WEPP_PLATFORM_LINUX)
+            errno = error;
         #endif
         }
 

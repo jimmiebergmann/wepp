@@ -48,7 +48,7 @@ namespace Wepp
             }
         }
 
-        Task<> Server::start(const unsigned short port, const std::string & endpoint)
+        Task<> Server::start(const uint16_t port, const std::string & endpoint)
         {
             std::lock_guard<std::mutex> lock(m_stopQueueMutex);
 

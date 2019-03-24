@@ -24,6 +24,7 @@
 */
 
 #include "wepp/socket/tcpSocket.hpp"
+#include "wepp/socket/platform/socketFunctions.hpp"
 
 namespace Wepp
 {
@@ -48,6 +49,43 @@ namespace Wepp
         {
             m_handle = handle;
             return *this;
+        }
+
+        bool TcpSocket::connect(const std::string & endpoint, const uint16_t port)
+        {
+            // Get address as integer.
+            uint32_t endpointAddr = htonl(INADDR_ANY);
+            if (endpoint.size() && inet_pton(AF_INET, endpoint.c_str(), &endpointAddr) != 1)
+            {
+                //std::cerr << "Invalid ip address: " << address << " - error: " << Socket::getLastError() << std::endl;
+                return false;
+            }
+
+            // Create listen socket.
+            m_handle = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+            if (WeppIsSocketInvalid(m_handle))
+            {
+                //std::cerr << "Socket creation failed with error: " << Socket::getLastError() << std::endl;
+                m_handle = 0;
+                return false;
+            }
+
+            // Create host address.
+            sockaddr_in host;
+            host.sin_family = AF_INET;
+            host.sin_addr.s_addr = endpointAddr;
+            host.sin_port = htons(port);
+
+            // Connect
+            if (::connect(m_handle, reinterpret_cast<const WEPP_SOCKADDR_TYPE *>(&host), sizeof(sockaddr_in)) != 0)
+            {
+                //std::cerr << "Failed to connect: " << Socket::getLastError() << std::endl;
+                WeppCloseSocket(m_handle);
+                m_handle = 0;
+                return false;
+            }
+
+            return true;
         }
 
         int TcpSocket::receive(char * buffer, const int length)

@@ -89,7 +89,7 @@ namespace Wepp
             * @see listen
             *
             */
-            Task<> start(const uint16_t port, const std::string endpoint);
+            Task<> start(const uint16_t port, const std::string endpoint = "");
 
             /**
             * Stop listening.

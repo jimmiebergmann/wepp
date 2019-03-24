@@ -68,30 +68,35 @@ namespace Wepp
     template<typename Return>
     const TaskStatus Task<Return>::status() const
     {
+        std::unique_lock<std::mutex> lock(m_members->m_mutex);
        return m_members->m_status;
     }
 
     template<typename Return>
     bool Task<Return>::pending() const
     {
+        std::unique_lock<std::mutex> lock(m_members->m_mutex);
         return m_members->m_status == TaskStatus::Pending;
     }
 
     template<typename Return>
     bool Task<Return>::successful() const
     {
+        std::unique_lock<std::mutex> lock(m_members->m_mutex);
         return m_members->m_status == TaskStatus::Successful;
     }
 
     template<typename Return>
     bool Task<Return>::failed() const
     {
+        std::unique_lock<std::mutex> lock(m_members->m_mutex);
         return m_members->m_status == TaskStatus::Failed;
     }
 
     template<typename Return>
     const bool Task<Return>::timeout() const
     {
+        std::unique_lock<std::mutex> lock(m_members->m_mutex);
         return m_members->m_timeout;
     }
 
