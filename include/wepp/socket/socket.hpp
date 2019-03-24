@@ -53,6 +53,18 @@ namespace Wepp
         public:
 
             /**
+            * Get latest native error.
+            *
+            */
+            static int getLastError();
+
+            /**
+            * Set latest native error.
+            *
+            */
+            static void setLastError(const int error);
+
+            /**
             * Handle type.
             *
             */
@@ -81,22 +93,16 @@ namespace Wepp
             virtual ~Socket();
 
             /**
-            * Get latest native error.
-            *
-            */
-            static int getLastError();
-
-            /**
-            * Set latest native error.
-            *
-            */
-            static void setLastError(const int error);
-
-            /**
             * Get the native handle.
             *
             */
             const Handle & handle() const;
+
+            /**
+            * Activate or deactivate socket blocking.
+            *
+            */
+            bool setBlocking(const bool status) const;
 
             /**
             * Set the native handle.

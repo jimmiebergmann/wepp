@@ -25,6 +25,7 @@
 
 #include "wepp/socket/tcpSocket.hpp"
 #include "wepp/socket/platform/socketFunctions.hpp"
+#include <iostream>
 
 namespace Wepp
 {
@@ -34,7 +35,7 @@ namespace Wepp
 
         TcpSocket::TcpSocket()
         {
-           
+
         }
 
         TcpSocket::TcpSocket(const Handle handle) :
@@ -79,7 +80,7 @@ namespace Wepp
             // Connect
             if (::connect(m_handle, reinterpret_cast<const WEPP_SOCKADDR_TYPE *>(&host), sizeof(sockaddr_in)) != 0)
             {
-                //std::cerr << "Failed to connect: " << Socket::getLastError() << std::endl;
+                std::cerr << "Failed to connect: " << Socket::getLastError() << std::endl;
                 WeppCloseSocket(m_handle);
                 m_handle = 0;
                 return false;

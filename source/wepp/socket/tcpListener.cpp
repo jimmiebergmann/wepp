@@ -91,7 +91,7 @@ namespace Wepp
                 int ret = 0;
                 if( (ret = ::bind(m_handle, reinterpret_cast<const WEPP_SOCKADDR_TYPE *>(&service), sizeof( service ) )) != 0 )
                 {
-                    //std::cerr << "bind function failed with error: " << Socket::getLastError() << std::endl;
+                    //std::cerr << "Bind function failed with error: " << Socket::getLastError() << std::endl;
                     stopListen();
                     task.fail();
                     return;
@@ -104,25 +104,42 @@ namespace Wepp
                     m_listenSempahore.wait();
                     if (!m_running)
                     {
-                        stopListen();
-                        return;
+                        break;
                     }
 
-                    // Listen for incoming socket.
-                    if (::listen(m_handle, SOMAXCONN) != 0)
+
+                    Handle listenHandle;
                     {
-                        //std::cerr << "listen function failed with error: " << Socket::getLastError() << std::endl;
-                        stopListen();
-                        return;
+                        std::lock_guard<std::mutex> lock(m_mutex);
+
+                        if (!m_running)
+                        {
+                            break;
+                        }
+
+                        listenHandle = m_handle;
+                    }
+
+                    if (::listen(listenHandle, SOMAXCONN) != 0)
+                    {
+                        //std::cerr << "Listen function failed with error: " << Socket::getLastError() << std::endl;
+                        break;
                     }
 
                     // Accept the connection.
-                    Socket::Handle connection = ::accept(m_handle, NULL, NULL);
+                    Socket::Handle connection = ::accept(listenHandle, NULL, NULL);
                     if (WeppIsSocketInvalid(connection) || !m_running)
                     {
-                        //std::cerr << "accept failed with error: " << Socket::getLastError() << std::endl;
-                        stopListen();
-                        return;
+                        std::lock_guard<std::mutex> lock(m_mutex);
+
+                        if(!m_running)
+                        {
+                            break;
+                        }
+
+                        std::cerr << "accept failed with error: " << Socket::getLastError() << std::endl;
+
+                        continue;
                     }
 
                     // Set native handle of task.
@@ -135,8 +152,9 @@ namespace Wepp
                         connTask.finish();
                         std::this_thread::yield();
                     }
-
                 }
+
+                stopListen();
 
             });
 
@@ -149,7 +167,7 @@ namespace Wepp
 
             if (!m_running)
             {
-                return m_stopTask;
+                return m_stopTask.finish();
             }
             m_running = false;
 

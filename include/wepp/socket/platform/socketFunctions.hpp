@@ -37,7 +37,7 @@
     #define WEPP_SOCKADDR_TYPE sockaddr
     #define WeppIsSocketValid(socket) (socket >= 0)
     #define WeppIsSocketInvalid(socket) (socket < 0)
-    #define WeppCloseSocket(socket) close(socket)
+    #define WeppCloseSocket(socket) shutdown(socket, SHUT_RDWR);close(socket)
 #endif
 
 #endif

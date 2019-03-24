@@ -6,8 +6,8 @@ using namespace Wepp;
 
 TEST(TcpListener, Start)
 {
-    const unsigned short port = 54341;
-    
+    const unsigned short port = 54344;
+
     {
         Socket::TcpListener listener;
         EXPECT_TRUE(listener.start(port).wait(std::chrono::seconds(3)).successful());
@@ -28,7 +28,7 @@ TEST(TcpListener, Start)
 
 TEST(TcpListener, Listen)
 {
-    const unsigned short port = 54341;
+    const unsigned short port = 54344;
 
     {
         Socket::TcpListener listener;
@@ -56,7 +56,7 @@ TEST(TcpListener, Listen)
 
         EXPECT_TRUE(listenTask.wait(std::chrono::seconds(3)).successful());
         auto server = listenTask();
-        
+
         const int bufferSize1 = 13;
         const int bufferSize2 = 8;
         char serverSendBuffer[bufferSize1] = "Hello world!";

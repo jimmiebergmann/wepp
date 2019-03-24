@@ -34,22 +34,6 @@ namespace Wepp
     namespace Socket
     {
 
-        Socket::Socket() :
-            m_handle(0)
-        { }
-
-        Socket::Socket(const Handle handle) :
-            m_handle(handle)
-        { }
-
-        Socket::~Socket()
-        {
-            if (m_handle)
-            {
-                WeppCloseSocket(m_handle);
-            }
-        }
-
         int Socket::getLastError()
         {
         #if defined(WEPP_PLATFORM_WINDOWS)
@@ -68,10 +52,74 @@ namespace Wepp
         #endif
         }
 
+        Socket::Socket() :
+            m_handle(0)
+        { }
+
+        Socket::Socket(const Handle handle) :
+            m_handle(handle)
+        { }
+
+        Socket::~Socket()
+        {
+            if (m_handle)
+            {
+                WeppCloseSocket(m_handle);
+            }
+        }
+
         const Socket::Handle & Socket::handle() const
         {
             return m_handle;
         }
+
+        bool Socket::setBlocking(const bool status) const
+        {
+            if( m_handle )
+            {
+                #if defined(WEPP_PLATFORM_WINDOWS)
+
+                    u_long blocking = p_Blocking ? 0 : 1;
+
+                    int result = ;
+                    if (ioctlsocket(m_handle, FIONBIO, &blocking) != 0)
+                    {
+                        //std::cerr << "Setting blocking failed with error: " << Socket::getLastError() << std::endl;
+                        return false;
+                    }
+
+                    return true;
+
+                #elif defined(WEPP_PLATFORM_LINUX)
+
+                    // Get the current  file descriptor.
+                    int opts = fcntl( m_handle, F_GETFL );
+                    if (opts < 0)
+                    {
+                        //std::cerr << "Getting file descriptor failed with error: " << Socket::getLastError() << std::endl;
+                        return false;
+                    }
+
+                    // Toggle the non blocking flag.
+                    opts ^= O_NONBLOCK;
+
+                    // Try to set the new file descriptor.
+                    int result = 0;
+                    if( ( result = fcntl( m_handle, F_SETFL, opts ) ) < 0 )
+                    {
+                        //std::cerr << "Setting blocking failed with error: " << Socket::getLastError() << std::endl;
+                        return false;
+                    }
+
+                    return true;
+
+
+                #endif
+            }
+
+            return false;
+        }
+
 
         Socket & Socket::operator = (const Handle & handle)
         {
