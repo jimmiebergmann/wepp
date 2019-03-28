@@ -107,13 +107,16 @@ namespace Wepp
             void handleStop();
 
             std::thread m_thread;                       /**< Main thread. */
+            std::mutex m_threadMutex;                   /**< Mutex lock for main thread.*/
+            std::mutex m_mainMutex;                     /**< Mutex lock for multiple methods.*/
             Socket::TcpListener m_listener;             /**< Tcp listener. */
-            std::atomic_bool m_running;                 /**< Flag, indicating if server is running. */
-            std::atomic_bool m_stopped;                 /**< Flag, indicating if server has been stopped. */
+            Priv::ReceivePool m_receivePool;            /**< Thred pool of receive pool workers.*/
+            std::atomic_bool m_starting;                /**< Flag, telling if server is currently starting. */
+            std::atomic_bool m_started;                 /**< Flag, telling if server is completely started. */
+            std::atomic_bool m_stopped;                 /**< Flag, telling if server is completely stopped. */
+            std::atomic_bool m_stopping;                /**< Flag, telling if server is currently stopping. */
+            TaskController<> m_startTask;                /**< Task for starting the server. */
             TaskController<> m_stopTask;                /**< Task for stopping the server. */
-            std::mutex m_stopQueueMutex;                /**< Mutex for the stop queue. */
-
-            Priv::ReceivePool m_receivePool;
 
         };
 

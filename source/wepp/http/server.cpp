@@ -28,6 +28,10 @@
 #include <chrono>
 #include <iostream>
 
+#define WEPP_COMBINE_HELPER(X,Y) X##Y
+#define WEPP_COMBINE(X, Y) WEPP_COMBINE_HELPER(X,Y)
+#define WEPP_DO_ONCE for(size_t WEPP_COMBINE(wepp_do_once_var_, __LINE__) = 0; WEPP_COMBINE(wepp_do_once_var_, __LINE__) < 1; WEPP_COMBINE(wepp_do_once_var_, __LINE__)++)
+
 namespace Wepp
 {
 
@@ -35,12 +39,14 @@ namespace Wepp
     {
 
         Server::Server() :
-            m_running(false),
-            m_stopped(true)
+            m_starting(false),
+            m_started(false),
+            m_stopped(true),
+            m_stopping(false)
         { }
 
         Server::~Server()
-        {
+        {           
             stop().wait();
             if (m_thread.joinable())
             {
@@ -50,97 +56,107 @@ namespace Wepp
 
         Task<> Server::start(const uint16_t port, const std::string & endpoint)
         {
-            std::lock_guard<std::mutex> lock(m_stopQueueMutex);
+            std::lock_guard<std::mutex> lock(m_mainMutex);
 
-            TaskController<> task(false);
-
-            if (m_running)
+            if (!m_stopped || m_started || m_starting || m_stopping)
             {
-                return task.finish();
+                return TaskController<>().fail();
             }
-            if (!m_stopped)
-            {
-                return task.fail();
-            }
-            m_stopped = false;
-
+            
+            m_starting = true;
             m_stopTask = TaskController<>();
+            m_startTask = TaskController<>();
 
             // Start main thread.
-            m_thread = std::thread([this, task, port, endpoint]() mutable
+            m_thread = std::thread([this, port, endpoint]() mutable
             {
-                const size_t poolMin = 10;
-                const size_t poolMax = 100;
-
-                m_receivePool.start(poolMin, poolMax, [this](Priv::HttpReceiver & receiver, std::shared_ptr<Socket::TcpSocket> socket)
+                WEPP_DO_ONCE
                 {
-                    Router::CallbackFunc callbackFunction = nullptr;
-                    Request request;
-                    Response response;
+                    std::lock_guard<std::mutex> threadLock(m_threadMutex);
 
-                    const auto status = receiver.receive(socket, request, response,
+                    if (m_stopping)
+                    {
+                        break;
+                    }
 
-                        // On request.
-                        [this, &callbackFunction](Request & request, Response & response) mutable -> bool
-                        {
-                            std::vector<std::string> matches;
-                            callbackFunction = route.find(request.method(), request.resource(), matches);
-                            if (callbackFunction == nullptr)
+                    const size_t poolMin = 10;
+                    const size_t poolMax = 100;
+
+                    m_receivePool.start(poolMin, poolMax, [this](Priv::HttpReceiver & receiver, std::shared_ptr<Socket::TcpSocket> socket)
+                    {
+                        Router::CallbackFunc callbackFunction = nullptr;
+                        Request request;
+                        Response response;
+
+                        const auto status = receiver.receive(socket, request, response,
+
+                            // On request.
+                            [this, &callbackFunction](Request & request, Response & response) mutable -> bool
                             {
-                                response.status(Status::NotFound);
-                                return false;
+                                std::vector<std::string> matches;
+                                callbackFunction = route.find(request.method(), request.resource(), matches);
+                                if (callbackFunction == nullptr)
+                                {
+                                    response.status(Status::NotFound);
+                                    return false;
+                                }
+                                return true;
                             }
-                            return true;
+                        );
+
+                        // Execute callback.
+                        if (status == Priv::HttpReceiver::Status::Ok && callbackFunction)
+                        {
+                            callbackFunction(request, response);
                         }
-                    );
 
-                    // Execute callback.
-                    if (status == Priv::HttpReceiver::Status::Ok && callbackFunction)
+                        if (status != Priv::HttpReceiver::Status::Disconnected)
+                        {
+                            // Send response
+                            auto & body = response.body();
+
+                            std::string responseStart =
+                                "HTTP/1.1 ";
+                            responseStart += std::to_string(static_cast<unsigned long long>(response.status()));
+                            responseStart += " " + getStatusAsString(response.status());
+                            responseStart += "\r\n";
+                            responseStart +=
+                                "Server: Wepp\r\n"
+                                "Content-Length: " + std::to_string(body.size()) + "\r\n"
+                                "Connection: Closed\r\n\r\n";
+
+                            socket->send(responseStart);
+
+                            const size_t bodySize = body.size();
+                            if (bodySize)
+                            {
+                                socket->send(body.data(), bodySize);
+                            }
+                            
+                        }
+
+                    }).wait();
+
+
+                    // Start listener.
+                    if (!m_listener.start(port, endpoint).wait().successful())
                     {
-                        callbackFunction(request, response);
+                        break;
                     }
 
-                    if (status != Priv::HttpReceiver::Status::Disconnected)
-                    {
-                        // Send response
-                        auto & body = response.body();
-
-                        std::string responseStart =
-                            "HTTP/1.1 ";
-                        responseStart += std::to_string(static_cast<unsigned long long>(response.status()));
-                        responseStart += " " + getStatusAsString(response.status());
-                        responseStart += "\r\n";
-                        responseStart +=
-                            "Server: Wepp\r\n"
-                            "Content-Length: " + std::to_string(body.size()) + "\r\n"
-                            "Connection: Closed\r\n\r\n";
-                         
-                        socket->send(responseStart);
-                        socket->send(body.data(), body.size());
-                    }
-
-                }).wait();
-
-
-                // Start listener.
-                if (!m_listener.start(port, endpoint).wait().successful())
-                {
-                    m_stopped = true;
-                    task.fail();
-                    return;
+                    // Set task as finished.
+                    m_starting = false;
+                    m_started = true;
+                    m_stopped = false;
+                    m_startTask.finish();
                 }
 
-                // Set task as finished.
-                m_running = true;
-                m_stopped = false;
-                task.finish();
-
                 // Listen loop.
-                while (m_running)
+                while (m_started && !m_stopping)
                 {
                     auto connection = m_listener.listen().wait();
 
-                    if (!m_running)
+                    if (m_stopping)
                     {
                         break;
                     }
@@ -158,32 +174,40 @@ namespace Wepp
                 handleStop();
             });
 
-            return task;
+            return m_startTask;
         }
 
         Task<> Server::stop()
         {
-            std::lock_guard<std::mutex> lock(m_stopQueueMutex);
+            std::lock_guard<std::mutex> lock(m_mainMutex);
+            std::lock_guard<std::mutex> threadLock(m_threadMutex);
 
             if (m_stopped)
             {
                 return m_stopTask.finish();
             }
+            m_stopping = true;
 
             m_listener.stop();
 
-            m_running = false;
             return m_stopTask;
         }
 
         void Server::handleStop()
         {
-            std::lock_guard<std::mutex> lock(m_stopQueueMutex);
+            std::lock_guard<std::mutex> lock(m_mainMutex);
 
-            //m_recivePool.stop().wait();
+            m_receivePool.stop().wait();
             m_listener.stop().wait();
 
+            if (!m_started)
+            {
+                m_startTask.fail();
+            }
+
+            m_stopping = false;
             m_stopped = true;
+            m_started = false;
             m_stopTask.finish();
         }
 

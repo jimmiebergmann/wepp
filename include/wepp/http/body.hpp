@@ -69,6 +69,10 @@ namespace Wepp
             */
             char * data()
             {
+                if (!m_data.size())
+                {
+                    return nullptr;
+                }
                 return &m_data[0];
             }
 

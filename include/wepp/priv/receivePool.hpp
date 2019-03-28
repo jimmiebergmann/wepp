@@ -30,17 +30,7 @@
 #include "wepp/priv/threadPool.hpp"
 #include "wepp/socket/tcpSocket.hpp"
 #include "wepp/priv/httpReceiver.hpp"
-/*#include "wepp/task.hpp"
-#include "wepp/semaphore.hpp"
-#include <atomic>
-#include <thread>
-#include <mutex>
-#include <queue>
-#include <set>
-#include <functional>
-#include <exception>
-#include <tuple>
-*/
+
 
 /**
 * Wepp namespace.

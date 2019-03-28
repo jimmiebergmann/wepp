@@ -5,18 +5,45 @@
 
 using namespace Wepp;
 
-/*TEST(Server, Start)
+TEST(Http_Server, Start_Stop)
 {
+    const uint16_t port = 7654;
     {
         Http::Server server;
-
-        auto ret = server.start().wait();
     }
+    {
+        Http::Server server;
+        EXPECT_NO_THROW(server.start(port));
+    }
+    {
+        Http::Server server;
+        EXPECT_TRUE(server.start(port).wait().successful());
+    }
+    {
+        Http::Server server;
+        EXPECT_TRUE(server.start(port).wait().successful());
+        EXPECT_TRUE(server.stop().wait().successful());
+    }
+    {
+        Http::Server server;
+        EXPECT_TRUE(server.start(port).wait().successful());
+        EXPECT_TRUE(server.start(port).wait().failed());
+    }
+    {
+        Http::Server server;
+        EXPECT_TRUE(server.stop().wait().successful());
+        EXPECT_TRUE(server.stop().wait().successful());
+    }
+    {
+        Http::Server server;
+        EXPECT_TRUE(server.stop().wait().successful());
+        EXPECT_TRUE(server.start(port).wait().successful());
+        EXPECT_TRUE(server.start(port).wait().failed());
+        EXPECT_TRUE(server.stop().wait().successful());
+    }
+}
 
-
-    EXPECT_TRUE(true);
-}*/
-
+/*
 TEST(Server, Route)
 {
     {
@@ -45,7 +72,7 @@ TEST(Server, Route)
             sem1.notifyOne();
         };
 
-        server.route["GET"]["/work/task/<[0-9]+>"] = [&sem2](const Http::Request & /*request*/, Http::Response & /*response*/)
+        server.route["GET"]["/work/task/<[0-9]+>"] = [&sem2](const Http::Request &, Http::Response & )
         {
             std::cout << "Requesting task!" << std::endl;
             sem2.notifyOne();
@@ -59,3 +86,4 @@ TEST(Server, Route)
 
     EXPECT_TRUE(true);
 }
+*/
