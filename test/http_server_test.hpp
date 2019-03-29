@@ -16,11 +16,16 @@ TEST(Http_Server, Start_Stop)
     const uint16_t port = 7654;
     {
         Http::Server server;
+        GTEST_PRINT("Destroying not started server.")
     }
+    GTEST_PRINT("Destroyed not started server.")
     {
         Http::Server server;
+        GTEST_PRINT("Starting throw server.")
         EXPECT_NO_THROW(server.start(port));
+        GTEST_PRINT("Starting throw server succeeded.")
     }
+    GTEST_PRINT("Destroyed server throw.")
     {
         Http::Server server;
         GTEST_PRINT("Starting server 1.")
