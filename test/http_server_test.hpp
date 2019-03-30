@@ -1,13 +1,7 @@
-#include "gtest/gtest.h"
+#include "test.hpp"
 #include "wepp/http/server.hpp"
 #include "wepp/semaphore.hpp"
 #include <iostream>
-
-#if defined(WEPP_PLATFORM_LINUX)
-    #define GTEST_PRINT(message) std::cout << "\033[0;32m" << "[          ] " << "\033[0;0m" << message << std::endl;
-#else
-    #define GTEST_PRINT(message) std::cout << "[          ] " << message << std::endl;
-#endif
 
 using namespace Wepp;
 
@@ -16,59 +10,59 @@ TEST(Http_Server, Start_Stop)
     const uint16_t port = 7654;
     {
         Http::Server server;
-        GTEST_PRINT("Destroying not started server.")
+        GTEST_PRINT("Destroying not started server.");
     }
-    GTEST_PRINT("Destroyed not started server.")
+    GTEST_PRINT("Destroyed not started server.");
     {
         Http::Server server;
-        GTEST_PRINT("Starting throw server.")
+        GTEST_PRINT("Starting throw server.");
         EXPECT_NO_THROW(server.start(port));
-        GTEST_PRINT("Starting throw server succeeded.")
+        GTEST_PRINT("Starting throw server succeeded.");
     }
-    GTEST_PRINT("Destroyed server throw.")
+    GTEST_PRINT("Destroyed server throw.");
     {
         Http::Server server;
-        GTEST_PRINT("Starting server 1.")
+        GTEST_PRINT("Starting server 1.");
         EXPECT_TRUE(server.start(port).wait().successful());
-        GTEST_PRINT("Starting successful 1.")
+        GTEST_PRINT("Starting successful 1.");
     }
-    GTEST_PRINT("Destroyed server 1.")
+    GTEST_PRINT("Destroyed server 1.");
     {
         Http::Server server;
-        GTEST_PRINT("Starting server 2.")
+        GTEST_PRINT("Starting server 2.");
         EXPECT_TRUE(server.start(port).wait().successful());
-        GTEST_PRINT("Starting successful 2.")
+        GTEST_PRINT("Starting successful 2.");
         EXPECT_TRUE(server.stop().wait().successful());
     }
-    GTEST_PRINT("Destroyed server 2.")
+    GTEST_PRINT("Destroyed server 2.");
     {
         Http::Server server;
-        GTEST_PRINT("Starting server 3.")
+        GTEST_PRINT("Starting server 3.");
         EXPECT_TRUE(server.start(port).wait().successful());
-        GTEST_PRINT("Starting server 3.1.")
+        GTEST_PRINT("Starting server 3.1.");
         EXPECT_TRUE(server.start(port).wait().failed());
     }
-    GTEST_PRINT("Destroyed server 3.")
+    GTEST_PRINT("Destroyed server 3.");
     {
         Http::Server server;
-        GTEST_PRINT("Stopping server 4.")
+        GTEST_PRINT("Stopping server 4.");
         EXPECT_TRUE(server.stop().wait().successful());
-        GTEST_PRINT("Stopping server 4.1.")
+        GTEST_PRINT("Stopping server 4.1.");
         EXPECT_TRUE(server.stop().wait().successful());
     }
-    GTEST_PRINT("Destroyed server 4.")
+    GTEST_PRINT("Destroyed server 4.");
     {
         Http::Server server;
-        GTEST_PRINT("Stopping server 5.")
+        GTEST_PRINT("Stopping server 5.");
         EXPECT_TRUE(server.stop().wait().successful());
-        GTEST_PRINT("Starting server 5.")
+        GTEST_PRINT("Starting server 5.");
         EXPECT_TRUE(server.start(port).wait().successful());
-        GTEST_PRINT("Starting server 5.1.")
+        GTEST_PRINT("Starting server 5.1.");
         EXPECT_TRUE(server.start(port).wait().failed());
-        GTEST_PRINT("Stopping server 5.1.")
+        GTEST_PRINT("Stopping server 5.1.");
         EXPECT_TRUE(server.stop().wait().successful());
     }
-    GTEST_PRINT("Destroyed server 5.")
+    GTEST_PRINT("Destroyed server 5.");
 }
 
 /*

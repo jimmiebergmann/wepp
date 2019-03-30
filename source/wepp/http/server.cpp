@@ -68,8 +68,11 @@ namespace Wepp
             m_startTask = TaskController<>();
 
             // Start main thread.
-            m_thread = std::thread([this, port, endpoint]() mutable
+            Semaphore threadStartSemaphore;
+            m_thread = std::thread([this, &threadStartSemaphore, port, endpoint]() mutable
             {
+                threadStartSemaphore.notifyOne();
+
                 WEPP_DO_ONCE
                 {
                     std::lock_guard<std::mutex> threadLock(m_threadMutex);
@@ -174,6 +177,7 @@ namespace Wepp
                 handleStop();
             });
 
+            threadStartSemaphore.wait();
             return m_startTask;
         }
 
