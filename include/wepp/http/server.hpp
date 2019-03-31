@@ -106,17 +106,26 @@ namespace Wepp
             */
             void handleStop();
 
-            std::thread m_thread;                       /**< Main thread. */
-            std::mutex m_threadMutex;                   /**< Mutex lock for main thread.*/
-            std::mutex m_mainMutex;                     /**< Mutex lock for multiple methods.*/
-            Socket::TcpListener m_listener;             /**< Tcp listener. */
-            Priv::ReceivePool m_receivePool;            /**< Thred pool of receive pool workers.*/
-            std::atomic_bool m_starting;                /**< Flag, telling if server is currently starting. */
-            std::atomic_bool m_started;                 /**< Flag, telling if server is completely started. */
-            std::atomic_bool m_stopped;                 /**< Flag, telling if server is completely stopped. */
-            std::atomic_bool m_stopping;                /**< Flag, telling if server is currently stopping. */
-            TaskController<> m_startTask;                /**< Task for starting the server. */
-            TaskController<> m_stopTask;                /**< Task for stopping the server. */
+            /**
+            * Enumerator of different server states.
+            *
+            */
+            enum class State
+            {
+                Stopped,
+                Stopping,
+                Started,
+                Starting
+            };
+
+            std::thread m_thread;               /**< Main thread. */
+            std::mutex m_mutex;                 /**< Mutex lock for multiple methods.*/
+            std::atomic<State> m_state;         /**< Current state of server. */
+            Socket::TcpListener m_listener;     /**< Tcp listener. */
+            Priv::ReceivePool m_receivePool;    /**< Thred pool of receive pool workers.*/
+            TaskController<> m_startTask;       /**< Task for starting the server. */
+            TaskController<> m_stopTask;        /**< Task for stopping the server. */
+
 
         };
 
