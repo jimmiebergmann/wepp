@@ -23,45 +23,25 @@
 *
 */
 
-#ifndef WEPP_PRIV_START_STOP_OBJECT_HPP
-#define WEPP_PRIV_START_STOP_OBJECT_HPP
-
-#include "wepp/build.hpp"
-#include "wepp/priv/threadPool.hpp"
-#include "wepp/socket/tcpSocket.hpp"
-#include "wepp/priv/httpReceiver.hpp"
-
-
-/**
-* Wepp namespace.
-*
-*/
 namespace Wepp
 {
 
-    /**
-    * Private namespace.
-    *
-    */
-    namespace  Priv
+    namespace Priv
     {
-        class StartStopObject
+
+        template<typename Container>
+        size_t HttpReceiverBuffer::readAll(Container & container)
         {
+            const size_t available = static_cast<size_t>(m_currentReceivePointer - m_currentPointer);
+            if (available)
+            {
+                container.append(m_currentPointer, available);
+                m_currentPointer = m_currentReceivePointer;
+            }
 
-        public:
-
-           
-
-        private:
-
-
-        };
+            return available;
+        }
 
     }
 
 }
-
-
-#include "wepp/priv/startStopObject.inl"
-
-#endif

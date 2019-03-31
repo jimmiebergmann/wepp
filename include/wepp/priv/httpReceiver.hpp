@@ -48,48 +48,91 @@ namespace Wepp
     namespace Priv
     {
 
+        /**
+        * Buffer, custom made for Http data.
+        * Internally used by HttpReceiver class.
+        *
+        */
         class WEPP_API HttpReceiverBuffer
         {
 
         public:
 
+            /**
+            * Enumerator describing reading results of buffer.
+            *
+            */
             enum class FindResult
             {
-                Found,
-                NewlineNotFound,
-                RegexNotFound,
-                ReachedMaxLength
+                Found,              /**< Successfully readed data from buffer. */
+                NewlineNotFound,    /**< No newline were found in available bytes. */
+                RegexNotFound,      /**< Newline were found, but given regex did not match. */
+                ReachedMaxLength    /**< Given max length is reached. */
             };
 
+            /**
+            * Constructor.
+            *
+            * @param size - Size of buffer.
+            *
+            */
             HttpReceiverBuffer(const size_t size);
 
+            /**
+            * Prepare buffer for new data to read.
+            *
+            */
             void reset();
 
+            /**
+            * Get allocated size of buffer.
+            *
+            */
             size_t size() const;
 
+            /**
+            * Get number of available bytes to read.
+            *
+            */
             size_t unreadBytes();
 
+            /**
+            * Receive data from socket and append to buffer.
+            *
+            */
             int receive(Socket::TcpSocket & socket);
+
+            /**
+            * Receive data from string and append to buffer.
+            *
+            */
             bool receive(const std::string & string);
       
+            /**
+            * Read line from buffer. A new line must be represented as "\r\n"
+            *
+            * @param output[out]    - String containing read bytes.
+            * @param maxLength[in]  - Maximum number of bytes to read.
+            *
+            * @return Result of line reading.
+            *
+            */
             FindResult readLine(std::string & output, const size_t maxLength = 0);
 
             FindResult regexSearch(std::cmatch & matches, const std::regex & regex, const size_t maxLength = 0);
 
             FindResult readNewline();
 
+            /**
+            * Read all available bytes.
+            *
+            * @param container[out] - Container receving all available bytes.
+            *
+            * @return Number of read bytes.
+            *
+            */
             template<typename Container>
-            size_t readAll(Container & container)
-            {
-                const size_t available = static_cast<size_t>(m_currentReceivePointer - m_currentPointer);
-                if (available)
-                {
-                    container.append(m_currentPointer, available);
-                    m_currentPointer = m_currentReceivePointer;
-                }
-
-                return available;
-            }
+            size_t readAll(Container & container);
 
         private:
 
@@ -150,7 +193,7 @@ namespace Wepp
             * The receive method internally uses two sets of buffers, used for swapping if one of them gets full.
             *
             * @param[out] request    - Output data of request.
-            * @param[out] request    - Output data of response.
+            * @param[out] response   - Output data of response.
             * @param[in] onRequest   - Function executed when the request line has been received. The receiver is cancelled if the function returns false.
             * @param[in] onHeaders   - Function executed when all headers are received. The receiver is cancelled if the function returns false.
             
@@ -162,9 +205,9 @@ namespace Wepp
 
         private:
 
-            const size_t m_limitRequestLine;                 /**< .*/
-            const size_t m_limitHeaderFieldLine;             /**< .*/
-            const size_t m_limitHeaderFieldCount;            /**< .*/
+            const size_t m_limitRequestLine;                 /**< Maximum number of bytes of received request line. */
+            const size_t m_limitHeaderFieldLine;             /**< Maximum number of bytes of received header line.*/
+            const size_t m_limitHeaderFieldCount;            /**< Maximum number of received headers.*/
             const size_t m_bufferSize;                       /**< Size of buffers.*/
 
             HttpReceiverBuffer m_buffer;
@@ -174,5 +217,7 @@ namespace Wepp
     }
 
 }
+
+#include "wepp/priv/httpReceiver.inl"
 
 #endif

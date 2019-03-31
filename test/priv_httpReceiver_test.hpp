@@ -1,7 +1,6 @@
-#include "gtest/gtest.h"
+#include "test.hpp"
 #include "wepp/priv/httpReceiver.hpp"
-#include "wepp/semaphore.hpp"
-
+#include "wepp/socket/tcpListener.hpp"
 
 using namespace Wepp;
 
@@ -45,6 +44,41 @@ TEST(Http_HttpReceiverBuffer, ReceiveString)
         EXPECT_STREQ(output.c_str(), "hello world");
 
         EXPECT_EQ(buffer.readLine(output), Priv::HttpReceiverBuffer::FindResult::NewlineNotFound);
+    }
+}
+
+TEST(Http_HttpReceiverBuffer, ReceiveSocket)
+{
+    {
+        const size_t bufferSize = 1024;
+        Priv::HttpReceiverBuffer buffer(bufferSize);
+        EXPECT_EQ(buffer.unreadBytes(), size_t(0));
+        
+        const uint16_t port = 7654;
+        Socket::TcpListener listener;
+        EXPECT_TRUE(listener.start(port).wait().successful());
+        auto listenTask = listener.listen();
+
+        Socket::TcpSocket client;
+        EXPECT_TRUE(client.connect("127.0.0.1", port));
+        EXPECT_TRUE(listenTask.wait().successful());
+        auto peer = listenTask();
+
+        const std::string line1 = "Hello world.";
+        const std::string line2 = "Second line!";
+        const std::string sendData = line1 + "\r\n" + line2 + "\r\n";
+
+        EXPECT_EQ(client.send(sendData), int(sendData.size()));
+        EXPECT_EQ(buffer.receive(*peer), int(sendData.size()));
+        EXPECT_EQ(buffer.unreadBytes(), size_t(sendData.size()));
+        
+        std::string readLine = "";
+        EXPECT_EQ(buffer.receive(*peer), int(sendData.size())); 
+        EXPECT_EQ(buffer.readLine(readLine), Priv::HttpReceiverBuffer::FindResult::Found);
+        EXPECT_STREQ(readLine.c_str(), line1.c_str());
+        EXPECT_EQ(buffer.readLine(readLine), Priv::HttpReceiverBuffer::FindResult::Found);
+        EXPECT_STREQ(readLine.c_str(), line2.c_str());
+        EXPECT_EQ(buffer.unreadBytes(), size_t(0));
     }
 }
 
@@ -127,7 +161,7 @@ TEST(Http_HttpReceiverBuffer, MakingSpace)
         Priv::HttpReceiverBuffer buffer(32);
         EXPECT_EQ(buffer.unreadBytes(), size_t(0));
 
-        const std::string firstString  = "First test string";
+        const std::string firstString = "First test string";
         const std::string secondString = "Second string is too long";
         std::string output = "";
 
@@ -144,6 +178,28 @@ TEST(Http_HttpReceiverBuffer, MakingSpace)
         EXPECT_EQ(buffer.readLine(output), Priv::HttpReceiverBuffer::FindResult::Found);
         EXPECT_EQ(buffer.unreadBytes(), size_t(0));
         EXPECT_STREQ(output.c_str(), secondString.c_str());
+    }
+}
+
+TEST(Http_HttpReceiverBuffer, ReadAll)
+{
+    {
+        Priv::HttpReceiverBuffer buffer(64);
+        EXPECT_EQ(buffer.unreadBytes(), size_t(0));
+
+        const std::string data = "Hello world, this is a test.";
+
+        for (size_t i = 0; i < 3; i++)
+        {
+            GTEST_PRINT("Loop: " << i);
+            buffer.receive(data);
+            EXPECT_EQ(buffer.unreadBytes(), data.size());
+
+            std::string readData = "";
+            EXPECT_EQ(buffer.readAll(readData), data.size());
+            EXPECT_STREQ(readData.c_str(), data.c_str());
+            EXPECT_EQ(buffer.unreadBytes(), size_t(0));
+        }
     }
 }
 

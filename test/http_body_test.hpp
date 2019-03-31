@@ -29,6 +29,5 @@ TEST(Http_Body, Body)
         body = "Hello world";
         EXPECT_EQ(body.size(), size_t(11));
         EXPECT_STREQ(std::string(body.data(), body.size()).c_str(), "Hello world");
-
     }
 }
