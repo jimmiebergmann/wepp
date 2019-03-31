@@ -23,7 +23,7 @@
 *
 */
 
-#include "wepp/http/request.hpp"
+#include "wepp/http/body.hpp"
 #include <algorithm>
 
 namespace Wepp
@@ -32,63 +32,53 @@ namespace Wepp
     namespace Http
     {
 
-        Request::Request() :
-            m_method(""),
-            m_resource(""),
-            m_version("HTTP/1.1")
+        Body::Body()
         { }
 
-        const std::string & Request::method() const
+        char * Body::data()
         {
-            return m_method;
+            if (!m_data.size())
+            {
+                return nullptr;
+            }
+            return &m_data[0];
         }
 
-        const std::string & Request::resource() const
+        const char * Body::data() const
         {
-            return m_resource;
+            if (!m_data.size())
+            {
+                return nullptr;
+            }
+            return &m_data[0];
         }
 
-        const std::string & Request::version() const
+        size_t Body::size() const
         {
-            return m_version;
+            return m_data.size();
         }
 
-        Request::HeaderMap & Request::headers()
+        Body & Body::append(const char * data, const size_t size)
         {
-            return m_headers;
-        }
-
-        const Request::HeaderMap & Request::headers() const
-        {
-            return m_headers;
-        }
-
-        const Body & Request::body() const
-        {
-            return m_body;
-        }
-
-        Body & Request::body()
-        {
-            return m_body;
-        }
-
-        Request & Request::method(const std::string & method)
-        {
-            m_method = method;
-            std::transform(m_method.begin(), m_method.end(), m_method.begin(), [](int c) -> char {return static_cast<char>(::toupper(c)); });
+            std::copy(data, data + size, std::back_inserter<std::vector<char> >(m_data));
             return *this;
         }
 
-        Request & Request::resource(const std::string & resource)
+        Body & Body::clear()
         {
-            m_resource = resource;
+            m_data.clear();
             return *this;
         }
 
-        Request & Request::version(const std::string & version)
+        Body & Body::operator =(const std::string & string)
         {
-            m_version = version;
+            m_data.assign(string.begin(), string.end());
+            return *this;
+        }
+
+        Body & Body::operator <<(const std::string & string)
+        {
+            std::copy(string.begin(), string.end(), std::back_inserter<std::vector<char> >(m_data));
             return *this;
         }
 

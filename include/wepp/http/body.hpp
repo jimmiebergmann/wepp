@@ -29,7 +29,6 @@
 #include "wepp/build.hpp"
 #include <string>
 #include <vector>
-#include <algorithm>
 
 /**
 * Wepp namespace.
@@ -51,7 +50,7 @@ namespace Wepp
         * The data is internally stored in a std::vector.
         *
         */
-        class Body
+        class WEPP_API Body
         {
 
         public:
@@ -60,74 +59,53 @@ namespace Wepp
             * Default constructor.
             *
             */
-            Body()
-            { }
+            Body();
 
             /**
             * Gets data of body.
             *
             */
-            char * data()
-            {
-                if (!m_data.size())
-                {
-                    return nullptr;
-                }
-                return &m_data[0];
-            }
+            char * data();
 
             /**
             * Gets const data of body.
             *
             */
-            const char * data() const
-            {
-                return &m_data[0];
-            }
+            const char * data() const;
 
             /**
             * Gets size of body.
             *
             */
-            size_t size() const
-            {
-                return m_data.size();
-            }
+            size_t size() const;
 
             /**
             * Append data to body
             *
             */
-            Body & append(const char * data, const size_t size)
-            {
-                std::copy(data, data + size, std::back_inserter<std::vector<char> >(m_data));
-                return *this;
-            }
+            Body & append(const char * data, const size_t size);
+
+            /**
+            * Clear body data.
+            *
+            */
+            Body & clear();
 
             /**
             * Assigning operator.
             *
             */
-            Body & operator =(const std::string & string)
-            {
-                m_data.assign(string.begin(), string.end());
-                return *this;
-            }
+            Body & operator =(const std::string & string);
 
             /**
             * Input steaming operator.
             *
             */
-            Body & operator <<(const std::string & string)
-            {
-                std::copy(string.begin(), string.end(), std::back_inserter<std::vector<char> >(m_data));
-                return *this;
-            }
+            Body & operator <<(const std::string & string);
 
         private:
 
             std::vector<char> m_data;     /**< Unique pointer for data.*/
-            //std::mutex m_mutex;           /**< Mutex protecting the data.*/
 
         };
 
