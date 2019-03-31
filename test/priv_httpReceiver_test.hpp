@@ -54,7 +54,7 @@ TEST(Http_HttpReceiverBuffer, ReceiveSocket)
         Priv::HttpReceiverBuffer buffer(bufferSize);
         EXPECT_EQ(buffer.unreadBytes(), size_t(0));
         
-        const uint16_t port = 7654;
+        const uint16_t port = 7655;
         Socket::TcpListener listener;
         EXPECT_TRUE(listener.start(port).wait().successful());
         auto listenTask = listener.listen();
@@ -73,7 +73,6 @@ TEST(Http_HttpReceiverBuffer, ReceiveSocket)
         EXPECT_EQ(buffer.unreadBytes(), size_t(sendData.size()));
         
         std::string readLine = "";
-        EXPECT_EQ(buffer.receive(*peer), int(sendData.size())); 
         EXPECT_EQ(buffer.readLine(readLine), Priv::HttpReceiverBuffer::FindResult::Found);
         EXPECT_STREQ(readLine.c_str(), line1.c_str());
         EXPECT_EQ(buffer.readLine(readLine), Priv::HttpReceiverBuffer::FindResult::Found);
