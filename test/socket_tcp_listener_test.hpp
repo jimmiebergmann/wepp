@@ -6,7 +6,7 @@ using namespace Wepp;
 
 TEST(TcpListener, Start)
 {
-    const unsigned short port = 54344;
+    const uint16_t port = 54344;
 
     {
         Socket::TcpListener listener;
@@ -85,7 +85,7 @@ TEST(TcpListener, Start)
 
 TEST(TcpListener, Listen)
 {
-    const unsigned short port = 54344;
+    const uint16_t port = 54344;
 
     {
         Socket::TcpListener listener;
