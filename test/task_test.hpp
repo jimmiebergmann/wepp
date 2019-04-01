@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include "test.hpp"
 #include "wepp/socket/socket.hpp"
 #include "wepp/task.hpp"
 #include <thread>
@@ -237,7 +237,7 @@ TEST(Task, Wait)
             EXPECT_GE(elapsed.count(), 0.9f);
             EXPECT_LT(elapsed.count(), 1.1f);
             EXPECT_TRUE(task.timeout());
-            std::cout << "Info: " << elapsed.count() << "  4s sleep, 2s timeout.";
+            GTEST_PRINT("Info: " << elapsed.count() << "  1s sleep, 2s timeout.");
             EXPECT_EQ(task.status(), TaskStatus::Pending);
             EXPECT_EQ(task(), 404);
         } 

@@ -9,6 +9,7 @@ function(createSourceGroups files rootPath)
 	endforeach()
 endfunction(createSourceGroups)
 
+
 project (wepp)
 cmake_minimum_required(VERSION 2.8)
 
@@ -18,6 +19,9 @@ option(CODE_COVERAGE "Enable coverage reporting" OFF)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+find_package(Threads)
+
 
 # Warnings as errors
 if(MSVC)
@@ -137,7 +141,7 @@ set_target_properties( petstoreExample
   RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
 )
-target_link_libraries(petstoreExample wepp)
+target_link_libraries(petstoreExample wepp ${CMAKE_THREAD_LIBS_INIT})
 
 
 # Routing example
@@ -150,7 +154,7 @@ set_target_properties( routingExample
   RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
 )
-target_link_libraries(routingExample wepp)
+target_link_libraries(routingExample wepp ${CMAKE_THREAD_LIBS_INIT})
 
 
 
@@ -159,4 +163,6 @@ add_custom_target(complete)
 add_dependencies(complete wepp)
 add_dependencies(complete wepp_static)
 add_dependencies(complete wepp_test)
+add_dependencies(complete petstoreExample)
+add_dependencies(complete routingExample)
 
