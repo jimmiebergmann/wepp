@@ -27,6 +27,7 @@
 #define WEPP_THREAD_POOL_HPP
 
 #include "wepp/build.hpp"
+#include "wepp/task.hpp"
 #include "wepp/semaphore.hpp"
 #include <functional>
 #include <thread>
@@ -237,7 +238,7 @@ namespace Wepp
 
         private:
 
-            typedef std::tuple<Args...> Work;           /**< Typedef of work.*/
+            typedef std::tuple<Args...> Work;   /**< Typedef of work.*/
 
             /**
             * Function for cleaning up after startup.
@@ -270,11 +271,11 @@ namespace Wepp
                 Starting
             };
 
-            std::thread m_thread;               /**< Main thread. */
-            std::mutex m_mutex;                 /**< Mutex lock for multiple methods.*/
-            std::atomic<State> m_state;         /**< Current state of thread pool. */
-            TaskController<> m_startTask;       /**< Task for starting the thread pool. */
-            TaskController<> m_stopTask;        /**< Task for stopping the thread pool. */
+            std::thread m_thread;                           /**< Main thread. */
+            std::mutex m_mutex;                             /**< Mutex lock for multiple methods.*/
+            std::atomic<State> m_state;                     /**< Current state of thread pool. */
+            TaskController<> m_startTask;                   /**< Task for starting the thread pool. */
+            TaskController<> m_stopTask;                    /**< Task for stopping the thread pool. */
 
             std::set<Worker *>      m_workerSet;            /**< Set of allocated workers.*/
             std::queue<Worker *>    m_workerQueue;          /**< Queue of available workers.*/

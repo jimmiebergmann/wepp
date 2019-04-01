@@ -29,40 +29,16 @@ namespace Wepp
     namespace Priv
     {
 
-
         // ThreadWorker implementations.
         template<typename ... Args>
         ThreadWorker<Args...>::ThreadWorker(ThreadPoolBase<Args...> * pool) :
             m_state(State::Stopped),
             m_pool(pool)
-        {
-            /*Semaphore semaphore;
-            m_thread = std::thread([this, &semaphore]()
-            {
-                m_running = true;
-                semaphore.notifyOne();
-
-                while (m_running)
-                {
-                    m_semaphore.wait();
-                    if (!m_running)
-                    {
-                        break;
-                    }
-
-                    executeVirtual();
-                }
-
-            });
-            semaphore.wait();*/
-        }
+        { }
 
         template<typename ... Args>
         ThreadWorker<Args...>::~ThreadWorker()
         {
-            /*m_running = false;
-            m_semaphore.notifyOne();*/
-
             stop().wait();
             if (m_thread.joinable())
             {
@@ -369,16 +345,27 @@ namespace Wepp
         void ThreadPool<T, Args...>::handleStop()
         {
             // Temporary store workers.
+            std::vector<Worker *> workers;
             std::vector<Task<> > workerStopTasks;
+            workers.reserve(m_workerSet.size());
             workerStopTasks.reserve(m_workerSet.size());
+
+            // Temporary store workers.
             {
                 std::lock_guard<std::mutex> lock(m_mutex);
 
                 for (auto it = m_workerSet.begin(); it != m_workerSet.end(); it++)
                 {
-                    workerStopTasks.push_back((*it)->stop());
+                    workers.push_back(*it);
                 }
             }
+
+            // Stop workers.
+            for (auto it = workers.begin(); it != workers.end(); it++)
+            {
+                workerStopTasks.push_back((*it)->stop());
+            }
+
 
             // Wait for workers to stop.
             for (auto it = workerStopTasks.begin(); it != workerStopTasks.end(); it++)

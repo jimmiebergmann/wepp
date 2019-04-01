@@ -127,15 +127,15 @@ namespace Wepp
                 Starting
             };
 
-            typedef TaskController<std::shared_ptr<TcpSocket> > ListenTask;
+            typedef TaskController<std::shared_ptr<TcpSocket> > ListenTaskController;    /**< Typedef of listen task controller.*/
 
-            std::thread             m_thread;       /**< Main thread. */
-            std::mutex              m_mutex;        /**< Mutex lock for multiple methods.*/
-            std::atomic<State>      m_state;        /**< Current state of listener. */
-            TaskController<>        m_startTask;    /**< Task for starting the listener. */
-            TaskController<>        m_stopTask;     /**< Task for stopping the listener. */
-            Semaphore               m_sempahore;    /**< Sempahore, triggering thread to listen.*/
-            std::queue<ListenTask>  m_listenQueue;  /**< Queue of listen tasks.*/
+            std::thread                         m_thread;       /**< Main thread. */
+            std::mutex                          m_mutex;        /**< Mutex lock for multiple methods.*/
+            std::atomic<State>                  m_state;        /**< Current state of listener. */
+            TaskController<>                    m_startTask;    /**< Task for starting the listener. */
+            TaskController<>                    m_stopTask;     /**< Task for stopping the listener. */
+            Semaphore                           m_sempahore;    /**< Sempahore, triggering thread to listen.*/
+            std::queue<ListenTaskController>    m_listenQueue;  /**< Queue of listen tasks.*/
 
         };
 
