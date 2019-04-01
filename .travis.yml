@@ -33,10 +33,8 @@ script:
   - cd build
   - cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug ..
   - cmake --build . --config Debug
-
   # Run test
-  - ./../bin/wepp_test
-  #- valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./test
+  - valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./../bin/wepp_test
 
 after_success:
   - lcov --directory ./CMakeFiles/wepp.dir --capture --output-file coverage.info #Or remove '*/tests/*'
