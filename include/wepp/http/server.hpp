@@ -90,6 +90,12 @@ namespace Wepp
             Task<> stop();
 
             /**
+            * Asynchronous function for checking if server is stopped.
+            *
+            */
+            Task<> stopped();
+
+            /**
             * Class containing all the routes.
             *
             * @remark Do not change any routes when the server has been started via start().
@@ -100,7 +106,7 @@ namespace Wepp
         private:
 
             /**
-            * Internal function for handling the stop tasks.
+            * Function for cleaning up before stopping.
             *
             */
             void handleStop();
@@ -120,11 +126,10 @@ namespace Wepp
             std::thread m_thread;               /**< Main thread. */
             std::mutex m_mutex;                 /**< Mutex lock for multiple methods.*/
             std::atomic<State> m_state;         /**< Current state of server. */
+            TaskController<> m_startTask;       /**< Task for starting the server. */
+            TaskController<> m_stopTask;        /**< Task for stopping the server. */    
             Socket::TcpListener m_listener;     /**< Tcp listener. */
             Priv::ReceivePool m_receivePool;    /**< Thred pool of receive pool workers.*/
-            TaskController<> m_startTask;       /**< Task for starting the server. */
-            TaskController<> m_stopTask;        /**< Task for stopping the server. */
-
 
         };
 

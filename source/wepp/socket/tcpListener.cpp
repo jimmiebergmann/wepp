@@ -34,15 +34,15 @@ namespace Wepp
     {
 
         TcpListener::TcpListener() :
-            m_running(false)
+            m_state(State::Stopped)
         { }
 
         TcpListener::~TcpListener()
         {
             stop().wait();
-            if (m_listenThread.joinable())
+            if (m_thread.joinable())
             {
-                m_listenThread.join();
+                m_thread.join();
             }
         }
 
@@ -50,67 +50,101 @@ namespace Wepp
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 
-            TaskController<> task;
-
-            if (m_running)
+            if (m_state != State::Stopped)
             {
-                return task.fail();
+                return TaskController<>().fail();
             }
 
+            m_state = State::Starting;
             m_stopTask = TaskController<>();
+            m_startTask = TaskController<>();
 
-            m_running = true;
-            m_listenThread = std::thread([this, task, port, endpoint]() mutable
+            if (m_thread.joinable())
             {
-                // Get address as integer.
-                uint32_t endpointAddr = htonl(INADDR_ANY);
-                if(endpoint.size() && inet_pton(AF_INET, endpoint.c_str(), &endpointAddr) != 1)
+                m_thread.join();
+            }
+
+            // Start main thread.
+            m_thread = std::thread([this, port, endpoint]() mutable
+            {
+                bool failedStarting = false;
+
+                WEPP_DO_ONCE
                 {
-                    //std::cerr << "Invalid ip address: " << address << " - error: " << Socket::getLastError() << std::endl;
-                    stopListen();
-                    task.fail();
-                    return;
+                    if (m_state != State::Starting)
+                    {
+                        failedStarting = true;
+                        break;
+                    }
+
+                    // Get address as integer.
+                    uint32_t endpointAddr = htonl(INADDR_ANY);
+                    if (endpoint.size() && inet_pton(AF_INET, endpoint.c_str(), &endpointAddr) != 1)
+                    {
+                        //std::cerr << "Invalid ip address: " << address << " - error: " << Socket::getLastError() << std::endl;
+                        failedStarting = true;
+                        break;
+                    }
+
+                    // Create listen socket.
+                    m_handle = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+                    if (WeppIsSocketInvalid(m_handle))
+                    {
+                        //std::cerr << "Socket creation failed with error: " << Socket::getLastError() << std::endl;
+                        m_handle = 0;
+                        failedStarting = true;
+                        break;
+                    }
+                    // Bind listen socket.
+                    sockaddr_in service;
+                    service.sin_family = AF_INET;
+                    service.sin_addr.s_addr = endpointAddr;
+                    service.sin_port = htons(port);
+
+                    int ret = 0;
+                    if ((ret = ::bind(m_handle, reinterpret_cast<const WEPP_SOCKADDR_TYPE *>(&service), sizeof(service))) != 0)
+                    {
+                        //std::cerr << "Bind function failed with error: " << Socket::getLastError() << std::endl;
+                        
+                        /*stopListen();
+                        task.fail();
+                        return;*/
+                        failedStarting = true;
+                        break;
+                    }
+
+                    if (::listen(m_handle, SOMAXCONN) != 0)
+                    {
+                        //std::cerr << "Listen function failed with error: " << Socket::getLastError() << std::endl;
+                        failedStarting = true;
+                        break;
+                    }
                 }
 
-                // Create listen socket.
-                m_handle = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-                if(WeppIsSocketInvalid(m_handle))
+                // Set task as finished or failed.
                 {
-                    //std::cerr << "Socket creation failed with error: " << Socket::getLastError() << std::endl;
-                    m_handle = 0;
-                    stopListen();
-                    task.fail();
-                    return;
-                }
-                // Bind listen socket.
-                sockaddr_in service;
-                service.sin_family = AF_INET;
-                service.sin_addr.s_addr = endpointAddr;
-                service.sin_port = htons(port);
+                    std::lock_guard<std::mutex> lock(m_mutex);
 
-                int ret = 0;
-                if( (ret = ::bind(m_handle, reinterpret_cast<const WEPP_SOCKADDR_TYPE *>(&service), sizeof( service ) )) != 0 )
-                {
-                    //std::cerr << "Bind function failed with error: " << Socket::getLastError() << std::endl;
-                    stopListen();
-                    task.fail();
-                    return;
+                    if (!failedStarting)
+                    {
+                        m_startTask.finish();
+
+                        if (m_state == State::Starting)
+                        {
+                            m_state = State::Started;
+                        }
+                    }
+                    else
+                    {
+                        m_startTask.fail();
+                    }
                 }
 
-                if (::listen(m_handle, SOMAXCONN) != 0)
+                while (m_state == State::Started)
                 {
-                    //std::cerr << "Listen function failed with error: " << Socket::getLastError() << std::endl;
-                    stopListen();
-                    task.fail();
-                    return;
-                }
-
-                task.finish();
-
-                while (m_running)
-                {
-                    m_listenSempahore.wait();
-                    if (!m_running)
+                    m_sempahore.wait();
+                    
+                    if (m_state != State::Started)
                     {
                         break;
                     }
@@ -120,7 +154,7 @@ namespace Wepp
                     {
                         std::lock_guard<std::mutex> lock(m_mutex);
 
-                        if (!m_running)
+                        if (m_state != State::Started)
                         {
                             break;
                         }
@@ -130,18 +164,21 @@ namespace Wepp
 
                     // Accept the connection.
                     Socket::Handle connection = ::accept(listenHandler, NULL, NULL);
-                    if (WeppIsSocketInvalid(connection) || !m_running)
+
+                    // Check if listener still is running.
                     {
                         std::lock_guard<std::mutex> lock(m_mutex);
 
-                        // Stop() were called.
-                        if(!m_running)
+                        if (m_state != State::Started)
                         {
                             break;
                         }
 
-                        //std::cerr << "accept failed with error: " << Socket::getLastError() << std::endl;
-                        continue;
+                        if (WeppIsSocketInvalid(connection))
+                        {
+                            //std::cerr << "accept failed with error: " << Socket::getLastError() << std::endl;
+                            continue;
+                        }
                     }
 
                     // Set native handle of task.
@@ -155,30 +192,36 @@ namespace Wepp
                     }
                 }
 
-                stopListen();
+                handleStop();
 
             });
 
-            return task;
+            return m_startTask;
         }
 
         Task<> TcpListener::stop()
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 
-            if (!m_running)
+            if (m_state == State::Stopping)
+            {
+                return m_stopTask;
+            }
+            else if (m_state == State::Stopped)
             {
                 return m_stopTask.finish();
             }
-            m_running = false;
 
+            m_state = State::Stopping;
+            
             if (m_handle)
             {
                 WeppCloseSocket(m_handle);
                 m_handle = 0;
             }
 
-            m_listenSempahore.notifyOne();
+            m_sempahore.notifyOne();
+
             return m_stopTask;
         }
 
@@ -187,21 +230,19 @@ namespace Wepp
             std::lock_guard<std::mutex> lock(m_mutex);
 
             TaskController<std::shared_ptr<TcpSocket>> task;
-            if (!m_running)
+            if (m_state != State::Started)
             {
                 return task.fail();
             }
 
             m_listenQueue.push(task);
-            m_listenSempahore.notifyOne();
+            m_sempahore.notifyOne();
             return task;
         }
 
-        void TcpListener::stopListen()
+        void TcpListener::handleStop()
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-
-            m_running = false;
 
             if (m_handle)
             {
@@ -215,7 +256,8 @@ namespace Wepp
                 m_listenQueue.pop();
             }
 
-            m_stopTask.finish();
+            m_state = State::Stopped;
+            m_stopTask.finish();        
         }
 
     }

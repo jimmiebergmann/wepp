@@ -33,10 +33,10 @@ namespace Wepp
         // ThreadWorker implementations.
         template<typename ... Args>
         ThreadWorker<Args...>::ThreadWorker(ThreadPoolBase<Args...> * pool) :
-            m_running(false),
+            m_state(State::Stopped),
             m_pool(pool)
         {
-            Semaphore semaphore;
+            /*Semaphore semaphore;
             m_thread = std::thread([this, &semaphore]()
             {
                 m_running = true;
@@ -54,14 +54,16 @@ namespace Wepp
                 }
 
             });
-            semaphore.wait();
+            semaphore.wait();*/
         }
 
         template<typename ... Args>
         ThreadWorker<Args...>::~ThreadWorker()
         {
-            m_running = false;
-            m_semaphore.notifyOne();
+            /*m_running = false;
+            m_semaphore.notifyOne();*/
+
+            stop().wait();
             if (m_thread.joinable())
             {
                 m_thread.join();
@@ -69,12 +71,102 @@ namespace Wepp
         }
 
         template<typename ... Args>
-        void ThreadWorker<Args...>::work(Args ... args)
+        void ThreadWorker<Args...>::enqueue(Args ... args)
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 
-            m_args = std::tuple<Args...>(args...);
+            m_args.push(std::tuple<Args...>(args...));
             m_semaphore.notifyOne();
+        }
+
+        template<typename ... Args>
+        Task<> ThreadWorker<Args...>::start()
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+
+            if (m_state != State::Stopped)
+            {
+                return TaskController<>().fail();
+            }
+
+            m_state = State::Starting;
+            m_stopTask = TaskController<>();
+            m_startTask = TaskController<>();
+
+            if (m_thread.joinable())
+            {
+                m_thread.join();
+            }
+
+            m_thread = std::thread([this]()
+            {
+                {
+                    std::lock_guard<std::mutex> lock(m_mutex);
+
+                    if (m_state == State::Starting)
+                    {
+                        m_state = State::Started;
+                    }
+
+                    m_startTask.finish();
+                }
+
+                while (m_state == State::Started)
+                {
+                    m_semaphore.wait();
+
+                    if (m_state != State::Started)
+                    {
+                        break;
+                    }
+
+                    executeVirtual();
+
+                    // Return worker to parent pool if no more work is available.
+                    {
+                        std::lock_guard<std::mutex> lock(m_mutex);
+
+                        if (!m_args.size())
+                        {
+                            m_pool->returnWorker(this);
+                        }
+                    }
+                   
+                }
+
+                handleStop();
+
+            });
+            return m_startTask;
+        }
+
+        template<typename ... Args>
+        Task<> ThreadWorker<Args...>::stop()
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+
+            if (m_state == State::Stopping)
+            {
+                return m_stopTask;
+            }
+            else if (m_state == State::Stopped)
+            {
+                return m_stopTask.finish();
+            }
+
+            m_state = State::Stopping;
+            m_semaphore.notifyOne();
+
+            return m_stopTask;
+        }
+
+        template<typename ... Args>
+        void ThreadWorker<Args...>::handleStop()
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+
+            m_state = State::Stopped;
+            m_stopTask.finish();
         }
 
         template<typename ... Args>
@@ -87,16 +179,27 @@ namespace Wepp
         template<std::size_t... Is>
         void ThreadWorker<Args...>::executeVirtualHelper(std::index_sequence<Is...>)
         {
-            execute(std::get<Is>(m_args)...);
-            m_pool->returnWorker(this);
-            m_args = std::tuple<Args...>();
+            std::tuple<Args...> * args = nullptr;
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+
+                args = &m_args.front();
+            }
+
+            execute(std::get<Is>(*args)...);
+
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+
+                m_args.pop();
+            }
         }
+
 
         // ThreadPool implementations.
         template<typename T, typename ... Args>
         ThreadPool<T, Args...>::ThreadPool() :
-            m_started(false),
-            m_stopped(true),
+            m_state(State::Stopped),
             m_minWorkers(0),
             m_maxWorkers(0)
         { }
@@ -104,11 +207,7 @@ namespace Wepp
         template<typename T, typename ... Args>
         ThreadPool<T, Args...>::~ThreadPool()
         {
-            if (stop().wait().failed())
-            {
-                //  throw std::runtime_error("Failed to stop thread pool at destruction.");
-            }
-
+            stop().wait();
             if (m_thread.joinable())
             {
                 m_thread.join();
@@ -121,11 +220,10 @@ namespace Wepp
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 
-            if (m_started || !m_stopped)
+            if (m_state != State::Stopped)
             {
                 return TaskController<>().fail();
             }
-            m_startedTask = TaskController<>();
 
             if (!minWorkers)
             {
@@ -135,39 +233,68 @@ namespace Wepp
             m_minWorkers = minWorkers;
             m_maxWorkers = maxWorkers >= minWorkers ? maxWorkers : minWorkers;
 
+            m_state = State::Starting;
+            m_stopTask = TaskController<>();
+            m_startTask = TaskController<>();
+
             m_enqueueSemaphore.reset();
             m_availableSemaphore.reset();
 
-            // Start thread. Notify wait semaphore when thread is started, to exit this function.
-            Semaphore threadSemaphore;
-            m_thread = std::thread([this, cargs..., &threadSemaphore]()
+            if (m_thread.joinable())
             {
-                m_started = true;
-                m_stopped = false;
-                threadSemaphore.notifyOne();
+                m_thread.join();
+            }
 
+            // Start main thread.
+            m_thread = std::thread([this, cargs...]()
+            {
                 // Allocate workers.
+                WEPP_DO_ONCE
                 {
                     std::lock_guard<std::mutex> lock(m_mutex);
+
+                    if (m_state != State::Starting)
+                    {
+                        break;
+                    }
+
+                    std::vector<Task<> > workerStartTasks;
+                    workerStartTasks.reserve(m_minWorkers);
 
                     for (size_t i = 0; i < m_minWorkers; i++)
                     {
                         T * worker = new T(this, cargs...);
                         m_workerSet.insert(worker);
                         m_workerQueue.push(worker);
+                        workerStartTasks.push_back(worker->start());
                         m_availableSemaphore.notifyOne();
+                    }
+
+                    // Wait for workers to start.
+                    for (auto it = workerStartTasks.begin(); it != workerStartTasks.end(); it++)
+                    {
+                        (*it).wait();
                     }
                 }
 
-                // The thread pool has been started, mark as finished.
-                m_startedTask.finish();
+                // Set task as finished.
+                {
+                    std::lock_guard<std::mutex> lock(m_mutex);
+
+                    if (m_state == State::Starting)
+                    {
+                        m_state = State::Started;
+                    }
+                    m_startTask.finish();
+                }
 
                 // Distribute work / allocate new workers.
-                while (m_started)
+                while (m_state == State::Started)
                 {
                     m_enqueueSemaphore.wait();
                     m_availableSemaphore.wait();
-                    if (!m_started)
+                    
+                    if (m_state != State::Started)
                     {
                         break;
                     }
@@ -185,11 +312,12 @@ namespace Wepp
                     }
                 }
 
-                cleanup();
+                // Finishing.
+                handleStop();
+                
             });
 
-            threadSemaphore.wait();
-            return m_startedTask;
+            return m_startTask;
         }
 
         template<typename T, typename ... Args>
@@ -197,17 +325,21 @@ namespace Wepp
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 
-            if (!m_started || m_stopped)
+            if (m_state == State::Stopping)
             {
-                return TaskController<>().finish();
+                return m_stopTask;
             }
-            m_stoppedTask = TaskController<>();
+            else if (m_state == State::Stopped)
+            {
+                return m_stopTask.finish();
+            }
 
-            m_started = false;
+            m_state = State::Stopping;
+
             m_enqueueSemaphore.notifyOne();     // Free main loop from blockage.
-            m_availableSemaphore.notifyOne();  // Free main loop from blockage.
+            m_availableSemaphore.notifyOne();   // Free main loop from blockage.
 
-            return m_stoppedTask;
+            return m_stopTask;
         }
 
         template<typename T, typename ... Args>
@@ -234,28 +366,43 @@ namespace Wepp
         }
 
         template<typename T, typename ... Args>
-        void ThreadPool<T, Args...>::cleanup()
+        void ThreadPool<T, Args...>::handleStop()
         {
-            std::lock_guard<std::mutex> lock(m_mutex);
-
-            for (auto it = m_workerSet.begin(); it != m_workerSet.end(); it++)
+            // Temporary store workers.
+            std::vector<Task<> > workerStopTasks;
+            workerStopTasks.reserve(m_workerSet.size());
             {
-                delete *it;
-            }
-            m_workerSet.clear();
+                std::lock_guard<std::mutex> lock(m_mutex);
 
-            while (m_workerQueue.size())
-            {
-                m_workerQueue.pop();
-            }
-
-            while (m_workQueue.size())
-            {
-                m_workQueue.pop();
+                for (auto it = m_workerSet.begin(); it != m_workerSet.end(); it++)
+                {
+                    workerStopTasks.push_back((*it)->stop());
+                }
             }
 
-            m_stopped = true;
-            m_stoppedTask.finish();
+            // Wait for workers to stop.
+            for (auto it = workerStopTasks.begin(); it != workerStopTasks.end(); it++)
+            {
+                it->wait();
+            }
+
+            // Cleanup workers.
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+
+                for (auto it = m_workerSet.begin(); it != m_workerSet.end(); it++)
+                {
+                    delete *it;
+                }
+
+                while (m_workerQueue.size())
+                {
+                    m_workerQueue.pop();
+                }
+            }
+
+            m_state = State::Stopped;
+            m_stopTask.finish();
         }
 
 
@@ -269,7 +416,7 @@ namespace Wepp
         template<std::size_t... Is>
         void ThreadPool<T, Args...>::executeWorkerHelper(Worker * worker, Work & work, std::index_sequence<Is...>)
         {
-            worker->work(std::get<Is>(work)...);
+            worker->enqueue(std::get<Is>(work)...);
         }
 
     }

@@ -70,5 +70,9 @@
     #define WEPP_API
 #endif
 
+// General helper functions.
+#define WEPP_COMBINE_HELPER(X,Y) X##Y
+#define WEPP_COMBINE(X, Y) WEPP_COMBINE_HELPER(X,Y)
+#define WEPP_DO_ONCE for(size_t WEPP_COMBINE(wepp_do_once_var_, __LINE__) = 0; WEPP_COMBINE(wepp_do_once_var_, __LINE__) < 1; WEPP_COMBINE(wepp_do_once_var_, __LINE__)++)
 
 #endif

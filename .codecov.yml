@@ -1,2 +1,3 @@
 ignore:
-  - "test"  # ignore test folder
+  - "test"
+  - "example"

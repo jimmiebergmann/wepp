@@ -27,10 +27,6 @@
 #include "wepp/priv/httpReceiver.hpp"
 #include <iostream>
 
-#define WEPP_COMBINE_HELPER(X,Y) X##Y
-#define WEPP_COMBINE(X, Y) WEPP_COMBINE_HELPER(X,Y)
-#define WEPP_DO_ONCE for(size_t WEPP_COMBINE(wepp_do_once_var_, __LINE__) = 0; WEPP_COMBINE(wepp_do_once_var_, __LINE__) < 1; WEPP_COMBINE(wepp_do_once_var_, __LINE__)++)
-
 namespace Wepp
 {
 
@@ -63,19 +59,27 @@ namespace Wepp
             m_stopTask = TaskController<>();
             m_startTask = TaskController<>();
 
+            if (m_thread.joinable())
+            {
+                m_thread.join();
+            }
+
             // Start main thread.
             m_thread = std::thread([this, port, endpoint]() mutable
             {
+                bool failedStarting = false;
+
+                WEPP_DO_ONCE
                 {
                     std::lock_guard<std::mutex> lock(m_mutex);
 
                     if (m_state != State::Starting)
                     {
-                        handleStop();
-                        return;
+                        failedStarting = true;
+                        break;
                     }
 
-                    const size_t poolMin = 10;
+                    const size_t poolMin = 1;
                     const size_t poolMax = 100;
 
                     if(!m_receivePool.start(poolMin, poolMax,
@@ -135,22 +139,36 @@ namespace Wepp
                         }
                     ).wait().successful())
                     {
-                        handleStop();
-                        return;
+                        failedStarting = true;
+                        break;
                     }
 
-
-                    // Start listener.
                     if (!m_listener.start(port, endpoint).wait().successful())
                     {
-                        handleStop();
-                        return;
-                    }
-
-                    // Set task as finished.
-                    m_state = State::Started;
-                    m_startTask.finish();
+                        failedStarting = true;
+                        break;
+                    }                                     
                 }
+
+                // Set task as finished or failed.
+                {
+                    std::lock_guard<std::mutex> lock(m_mutex);
+
+                    if (!failedStarting)
+                    {
+                        m_startTask.finish();
+
+                        if (m_state == State::Starting)
+                        {
+                            m_state = State::Started;
+                        }
+                    }
+                    else
+                    {
+                        m_startTask.fail();
+                    }
+                }
+
 
                 // Listen loop.
                 while (m_state == State::Started)
@@ -173,10 +191,7 @@ namespace Wepp
                 }
 
                 // Finishing.
-                {
-                    std::lock_guard<std::mutex> lock(m_mutex);
-                    handleStop();
-                }
+                handleStop();
             });
 
             return m_startTask;
@@ -201,17 +216,20 @@ namespace Wepp
             return m_stopTask;
         }
 
+        Task<> Server::stopped()
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            return m_stopTask;
+        }
+
         void Server::handleStop()
         {
+            std::lock_guard<std::mutex> lock(m_mutex);
+
             m_receivePool.stop().wait();
             m_listener.stop().wait();
 
-            if (m_state != State::Started)
-            {
-                m_startTask.fail();
-            }
             m_state = State::Stopped;
-
             m_stopTask.finish();
         }
 

@@ -34,6 +34,7 @@
 #include <mutex>
 #include <set>
 #include <queue>
+#include <vector>
 #include <tuple>
 #include <utility>
 
@@ -80,10 +81,22 @@ namespace Wepp
             virtual ~ThreadWorker();
 
             /**
-            * Notify about new work.
+            * Enqueue work.
             *
             */
-            void work(Args ... args);
+            void enqueue(Args ... args);
+
+            /**
+            * Asynchronous function for starting worker.
+            *
+            */
+            Task<> start();
+
+            /**
+            * Asynchronous function for stopping worker.
+            *
+            */
+            Task<> stop();
 
         private:
 
@@ -95,6 +108,17 @@ namespace Wepp
             */
             virtual void execute(Args ... args) = 0;
 
+            /**
+            * Function for cleaning up before stopping.
+            *
+            */
+            void handleStop();
+
+            /**
+            * Called to execute function.
+            * Internally calling executeVirtualHelper to unpack parameters.
+            *
+            */
             void executeVirtual();
 
             /**
@@ -104,12 +128,27 @@ namespace Wepp
             template<std::size_t... Is>
             void executeVirtualHelper( std::index_sequence<Is...>);
 
-            std::thread                 m_thread;
-            std::mutex                  m_mutex;
-            std::atomic_bool            m_running;
-            std::tuple<Args...>         m_args;
-            Semaphore                   m_semaphore;
-            ThreadPoolBase<Args...> *   m_pool;
+
+            /**
+            * Enumerator of different thread worker states.
+            *
+            */
+            enum class State
+            {
+                Stopped,
+                Stopping,
+                Started,
+                Starting
+            };
+
+            std::thread                         m_thread;       /**< Main thread. */
+            std::mutex                          m_mutex;        /**< Mutex lock for multiple methods.*/
+            std::atomic<State>                  m_state;        /**< Current state of thread worker. */
+            TaskController<>                    m_startTask;    /**< Task for starting the thread worker. */
+            TaskController<>                    m_stopTask;     /**< Task for stopping the thread worker. */
+            std::queue<std::tuple<Args...> >    m_args;         /**< Queue of arguments to execute on virtual function called "execte".*/
+            Semaphore                           m_semaphore;    /**< Semaphore to handle notifications of enqueued work.*/
+            ThreadPoolBase<Args...> *           m_pool;         /**< Pointer to parent pool, used for returning itself to pool after all work has been executed. */
 
         };
 
@@ -204,7 +243,7 @@ namespace Wepp
             * Function for cleaning up after startup.
             *
             */
-            void cleanup();
+            void handleStop();
 
             /**
             * Function for executing worker function. Internally calling executeWorkerHelper to caset tuple as parameter pack.
@@ -219,12 +258,23 @@ namespace Wepp
             template<std::size_t... Is>
             void executeWorkerHelper(Worker * worker, Work & work, std::index_sequence<Is...>);
 
-            std::atomic_bool        m_started;              /**< Flag indicating if the pool is started and running.*/
-            std::atomic_bool        m_stopped;              /**< Flag indicating if the pool is completely stopped.*/
-            TaskController<>        m_startedTask;          /**< Task controller for indicating completion of pool start*/
-            TaskController<>        m_stoppedTask;          /**< Task controller for indicating completion of pool stoppage.*/
-            std::thread             m_thread;               /**< Thread distrubuting work and [de]/allocating workers. */
-            std::mutex              m_mutex;                /**< Mutex protecting the queue/set containers. */
+            /**
+            * Enumerator of different thread pool states.
+            *
+            */
+            enum class State
+            {
+                Stopped,
+                Stopping,
+                Started,
+                Starting
+            };
+
+            std::thread m_thread;               /**< Main thread. */
+            std::mutex m_mutex;                 /**< Mutex lock for multiple methods.*/
+            std::atomic<State> m_state;         /**< Current state of thread pool. */
+            TaskController<> m_startTask;       /**< Task for starting the thread pool. */
+            TaskController<> m_stopTask;        /**< Task for stopping the thread pool. */
 
             std::set<Worker *>      m_workerSet;            /**< Set of allocated workers.*/
             std::queue<Worker *>    m_workerQueue;          /**< Queue of available workers.*/

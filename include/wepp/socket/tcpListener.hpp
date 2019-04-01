@@ -110,17 +110,32 @@ namespace Wepp
         private:
 
             /**
-            * Internal function for stopping the listener.
+            * Function for cleaning up before stopping.
             *
             */
-            void stopListen();
+            void handleStop();
 
-            std::atomic_bool m_running;                                             /**< Flag, indicating if the listening thread is running.*/
-            std::thread m_listenThread;                                             /**< Listen thread.*/
-            Semaphore m_listenSempahore;                                            /**< Sempahore, triggering thread to listen.*/
-            std::queue<TaskController<std::shared_ptr<TcpSocket>>> m_listenQueue;   /**< Queue of listen tasks.*/
-            TaskController<> m_stopTask;                                            /**< Task for stopping the listener.*/
-            std::mutex m_mutex;                                                     /**< Mutex lock, controlling sync.*/
+            /**
+            * Enumerator of different server states.
+            *
+            */
+            enum class State
+            {
+                Stopped,
+                Stopping,
+                Started,
+                Starting
+            };
+
+            typedef TaskController<std::shared_ptr<TcpSocket> > ListenTask;
+
+            std::thread             m_thread;       /**< Main thread. */
+            std::mutex              m_mutex;        /**< Mutex lock for multiple methods.*/
+            std::atomic<State>      m_state;        /**< Current state of listener. */
+            TaskController<>        m_startTask;    /**< Task for starting the listener. */
+            TaskController<>        m_stopTask;     /**< Task for stopping the listener. */
+            Semaphore               m_sempahore;    /**< Sempahore, triggering thread to listen.*/
+            std::queue<ListenTask>  m_listenQueue;  /**< Queue of listen tasks.*/
 
         };
 

@@ -42,6 +42,8 @@ endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
 # Find files
 file(GLOB_RECURSE test_files "${CMAKE_SOURCE_DIR}/test/*.cpp" "${CMAKE_SOURCE_DIR}/test/*.hpp")
+file(GLOB_RECURSE petStoreExampleFile "${CMAKE_SOURCE_DIR}/example/petstoreExample.cpp")
+file(GLOB_RECURSE routingExampleFile "${CMAKE_SOURCE_DIR}/example/routingExample.cpp")
 file(GLOB_RECURSE wepp_src "${CMAKE_SOURCE_DIR}/source/wepp/*.cpp")
 file(GLOB_RECURSE wepp_inc "${CMAKE_SOURCE_DIR}/include/wepp/*.hpp" "${CMAKE_SOURCE_DIR}/include/wepp/*.inl")
 file(GLOB wepp_files ${wepp_src} ${wepp_inc})
@@ -124,10 +126,33 @@ endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
 target_link_libraries(wepp_test gtest_main wepp)
 
-message("${CMAKE_SOURCE_DIR}")
-message("${CMAKE_SOURCE_DIR}")
-message("${CMAKE_SOURCE_DIR}")
-message("${CMAKE_SOURCE_DIR}")
+
+# Petstore example
+include_directories ("${CMAKE_SOURCE_DIR}/include")
+link_directories("${CMAKE_SOURCE_DIR}/lib")
+add_executable(petstoreExample ${petStoreExampleFile})
+set_target_properties( petstoreExample
+  PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
+)
+target_link_libraries(petstoreExample wepp)
+
+
+# Routing example
+include_directories ("${CMAKE_SOURCE_DIR}/include")
+link_directories("${CMAKE_SOURCE_DIR}/lib")
+add_executable(routingExample ${routingExampleFile})
+set_target_properties( routingExample
+  PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
+)
+target_link_libraries(routingExample wepp)
+
+
 
 # Complete target, for building everything.
 add_custom_target(complete)
