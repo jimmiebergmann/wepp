@@ -67,7 +67,7 @@ TEST(Priv_ReciverPool, Start_Stop)
 
 TEST(Priv_ReciverPool, Enqueue)
 {
-    for(size_t i = 1; i <= 100; i++)
+    for(size_t i = 1; i <= 10; i++)
     {
         Priv::ReceivePool pool;
         Semaphore semaphore;
