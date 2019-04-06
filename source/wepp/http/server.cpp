@@ -92,6 +92,7 @@ namespace Wepp
                             Router::CallbackFunc routeFunction = nullptr;
                             Request request;
                             Response response;
+                            Response errorResponse;
 
                             auto status = receiver.receive(socket, request, response,
 
@@ -114,7 +115,6 @@ namespace Wepp
                             );
 
                             Response * finalResponse = &response;
-
                             bool errorOccured = false;
 
                             // Execute route function.
@@ -146,8 +146,7 @@ namespace Wepp
                             // Execute error callback.
                             if (errorOccured)
                             {
-                                Response onErrorResponse;
-                                onErrorResponse.status(response.status());
+                                errorResponse.status(response.status());
                                 OnRequestRouter * errorOnRequest = nullptr;
                                 OnRequestRouter::CallbackFunction * errorFunction = nullptr;
 
@@ -179,24 +178,25 @@ namespace Wepp
                                 {
                                     try
                                     {
-                                        (*errorFunction)(onErrorResponse);
+                                        (*errorFunction)(errorResponse);
                                     }
                                     catch (std::exception &)
                                     {
-                                        onErrorResponse.clear();
-                                        onErrorResponse.status(Status::InternalServerError);
-                                        m_defaultOnError(onErrorResponse);
+                                        errorResponse.clear();
+                                        errorResponse.status(Status::InternalServerError);
+                                        m_defaultOnError(errorResponse);
                                     }
                                 }
                                 else
                                 {
                                     
-                                    m_defaultOnError(onErrorResponse);
+                                    m_defaultOnError(errorResponse);
                                 }
 
-                                finalResponse = &onErrorResponse;
+                                finalResponse = &errorResponse;
                             }
 
+                            // Send final response to client.
                             sendResponse(*socket, *finalResponse);
 
                         }
