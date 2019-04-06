@@ -86,7 +86,6 @@ TEST(Server, Route)
             EXPECT_EQ(request.body().size(), size_t(8));
             EXPECT_STREQ(std::string(request.body().data(), request.body().size()).c_str(), "cool kid");
 
-
             response << "foo bar response.";
             sem1.notifyOne();
         };
@@ -106,6 +105,15 @@ TEST(Server, Route)
 
             response << "hello world response.";
             sem2.notifyOne();
+        };
+
+        server.onClientError = [&server](Http::Response)
+        {
+            ADD_FAILURE();
+        };
+        server.onServerError = [&server](Http::Response)
+        {
+            ADD_FAILURE();
         };
 
         const uint16_t port = 54343;
@@ -150,8 +158,104 @@ TEST(Server, Route)
         sem1.wait();
         sem2.wait();
     }
+}
 
+TEST(Server, BadRequest_1)
+{
+    Http::Server server;
+    const uint16_t port = 54343;
 
+    server.route["GET"]["/test"] = [](const Http::Request &, Http::Response)
+    {
+        GTEST_PRINT("Should not enter this function.");
+        ADD_FAILURE();
+    };
+    server.onServerError = [&server](Http::Response)
+    {
+        GTEST_PRINT("Should not enter this function.");
+        ADD_FAILURE();
+    };
+    server.onClientError = [&server](Http::Response)
+    {
+        server.stop();
+    };
+
+    EXPECT_TRUE(server.start(54343, "127.0.0.1").wait().successful());
+
+    Socket::TcpSocket peer;
+    EXPECT_TRUE(peer.connect("127.0.0.1", port));
+
+    std::string peerData =
+        "GET /test\r\n\r\n";
+    EXPECT_EQ(peer.send(peerData), int(peerData.size()));
+    GTEST_PRINT("Waiting for onClientError to get triggered.");
+
+    server.stopped().wait();
+}
+TEST(Server, BadRequest_2)
+{
+    Http::Server server;
+    const uint16_t port = 54343;
+
+    server.route["GET"]["/test"] = [](const Http::Request &, Http::Response)
+    {
+        GTEST_PRINT("Should not enter this function.");
+        ADD_FAILURE();
+    };
+    server.onServerError = [&server](Http::Response)
+    {
+        GTEST_PRINT("Should not enter this function.");
+        ADD_FAILURE();
+    };
+    server.onClientError = [&server](Http::Response)
+    {
+        server.stop();
+    };
+
+    EXPECT_TRUE(server.start(54343, "127.0.0.1").wait().successful());
+
+    Socket::TcpSocket peer;
+    EXPECT_TRUE(peer.connect("127.0.0.1", port));
+
+    std::string peerData =
+        "GET /test HTTP/1.1\r\n"
+        "key 1: value 1\r\n"
+        "key 2 : value 2\r\n\r\n";
+    EXPECT_EQ(peer.send(peerData), int(peerData.size()));
+    GTEST_PRINT("Waiting for onClientError to get triggered.");
+    server.stopped().wait();
+}
+TEST(Server, InternalError_1)
+{
+    Http::Server server;
+    const uint16_t port = 54343;
+
+    server.route["GET"]["/test"] = [](const Http::Request &, Http::Response)
+    {
+        throw std::runtime_error("Exception thrown from route.");
+    };
+    server.onServerError = [&server](Http::Response)
+    {
+        server.stop();
+    };
+    server.onClientError = [&server](Http::Response)
+    {
+        GTEST_PRINT("Should not enter this function.");
+        ADD_FAILURE();
+    };
+
+    EXPECT_TRUE(server.start(54343, "127.0.0.1").wait().successful());
+
+    Socket::TcpSocket peer;
+    EXPECT_TRUE(peer.connect("127.0.0.1", port));
+
+    std::string peerData =
+        "GET /test HTTP/1.1\r\n"
+        "key 1: value 1\r\n"
+        "key 2: value 2\r\n\r\n";
+    EXPECT_EQ(peer.send(peerData), int(peerData.size()));
+    GTEST_PRINT("Waiting for onServerError to get triggered.");
+    server.stopped().wait();
 }
 
 /*

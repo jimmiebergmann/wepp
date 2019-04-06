@@ -133,7 +133,7 @@ namespace Wepp
                                 
                             }
                             // Client disconnected.
-                            else if (status != Priv::HttpReceiver::Status::Disconnected)
+                            else if (status == Priv::HttpReceiver::Status::Disconnected)
                             {
                                 return;
                             }
