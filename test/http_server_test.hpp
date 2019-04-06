@@ -195,7 +195,7 @@ TEST(Server, BadRequest_1)
 TEST(Server, BadRequest_2)
 {
     Http::Server server;
-    const uint16_t port = 54344;
+    const uint16_t port = 54343;
 
     server.route["GET"]["/test"] = [](const Http::Request &, Http::Response)
     {
@@ -228,7 +228,7 @@ TEST(Server, BadRequest_2)
 TEST(Server, InternalError_1)
 {
     Http::Server server;
-    const uint16_t port = 54345;
+    const uint16_t port = 54343;
 
     server.route["GET"]["/test"] = [](const Http::Request &, Http::Response)
     {
