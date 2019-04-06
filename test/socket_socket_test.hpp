@@ -35,7 +35,7 @@ TEST(Socket, Socket)
 
 TEST(Socket, TcpSocket)
 {
-    const uint16_t port = 54344;
+    const uint16_t port = 54345;
 
     {
         Socket::TcpListener listener;

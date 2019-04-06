@@ -195,7 +195,7 @@ TEST(Server, BadRequest_1)
 TEST(Server, BadRequest_2)
 {
     Http::Server server;
-    const uint16_t port = 54343;
+    const uint16_t port = 54344;
 
     server.route["GET"]["/test"] = [](const Http::Request &, Http::Response)
     {
@@ -212,7 +212,7 @@ TEST(Server, BadRequest_2)
         server.stop();
     };
 
-    EXPECT_TRUE(server.start(54343, "127.0.0.1").wait().successful());
+    EXPECT_TRUE(server.start(port, "127.0.0.1").wait().successful());
 
     Socket::TcpSocket peer;
     EXPECT_TRUE(peer.connect("127.0.0.1", port));
@@ -228,7 +228,7 @@ TEST(Server, BadRequest_2)
 TEST(Server, InternalError_1)
 {
     Http::Server server;
-    const uint16_t port = 54343;
+    const uint16_t port = 54345;
 
     server.route["GET"]["/test"] = [](const Http::Request &, Http::Response)
     {
@@ -244,7 +244,7 @@ TEST(Server, InternalError_1)
         ADD_FAILURE();
     };
 
-    EXPECT_TRUE(server.start(54343, "127.0.0.1").wait().successful());
+    EXPECT_TRUE(server.start(port, "127.0.0.1").wait().successful());
 
     Socket::TcpSocket peer;
     EXPECT_TRUE(peer.connect("127.0.0.1", port));
