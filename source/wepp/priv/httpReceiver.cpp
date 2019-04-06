@@ -424,7 +424,7 @@ namespace Wepp
                     return Status::PeerError;
                 }
 
-                request.headers()[fieldName] = fieldValue;
+                request.headers().set(fieldName, fieldValue);
                 headerCount++;
 
                 if (m_buffer.readNewline() == HttpReceiverBuffer::FindResult::Found)

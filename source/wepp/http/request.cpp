@@ -53,12 +53,12 @@ namespace Wepp
             return m_version;
         }
 
-        Request::HeaderMap & Request::headers()
+        Headers & Request::headers()
         {
             return m_headers;
         }
 
-        const Request::HeaderMap & Request::headers() const
+        const Headers & Request::headers() const
         {
             return m_headers;
         }

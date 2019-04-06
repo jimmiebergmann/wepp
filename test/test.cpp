@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include "test.hpp"
 
 #include "task_test.hpp"
 #include "uri_test.hpp"
@@ -6,6 +6,7 @@
 #include "socket_tcp_listener_test.hpp"
 #include "http_method_test.hpp"
 #include "http_status_test.hpp"
+#include "http_headers_test.hpp"
 #include "http_body_test.hpp"
 #include "http_request_test.hpp"
 #include "http_response_test.hpp"

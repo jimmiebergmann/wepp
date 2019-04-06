@@ -79,26 +79,10 @@ TEST(Server, Route)
             EXPECT_STREQ(request.resource().c_str(), "/foo/bar");
             EXPECT_STREQ(request.version().c_str(), "HTTP/1.1");
             
-            auto keyIt = request.headers().find("key1");
-            EXPECT_NE(keyIt, request.headers().end());
-            if (keyIt != request.headers().end())
-            {
-                EXPECT_STREQ(keyIt->second.c_str(), "value 1");
-            }
+            EXPECT_STREQ(request.headers().find("Key 1").c_str(), "value 1");
+            EXPECT_STREQ(request.headers().find("Key 2").c_str(), "value 2");
+            EXPECT_STREQ(request.headers().find("content-length").c_str(), "8");
 
-            keyIt = request.headers().find("key2");
-            EXPECT_NE(keyIt, request.headers().end());
-            if (keyIt != request.headers().end())
-            {
-                EXPECT_STREQ(keyIt->second.c_str(), "value 2");
-            }
-
-            keyIt = request.headers().find("content-length");
-            EXPECT_NE(keyIt, request.headers().end());
-            if (keyIt != request.headers().end())
-            {
-                EXPECT_STREQ(keyIt->second.c_str(), "8");
-            }
             EXPECT_EQ(request.body().size(), size_t(8));
             EXPECT_STREQ(std::string(request.body().data(), request.body().size()).c_str(), "cool kid");
 
@@ -113,26 +97,10 @@ TEST(Server, Route)
             EXPECT_STREQ(request.resource().c_str(), "/hello/world");
             EXPECT_STREQ(request.version().c_str(), "HTTP/1.1");
 
-            auto keyIt = request.headers().find("key3");
-            EXPECT_NE(keyIt, request.headers().end());
-            if (keyIt != request.headers().end())
-            {
-                EXPECT_STREQ(keyIt->second.c_str(), "value 3");
-            }
-
-            keyIt = request.headers().find("key4");
-            EXPECT_NE(keyIt, request.headers().end());
-            if (keyIt != request.headers().end())
-            {
-                EXPECT_STREQ(keyIt->second.c_str(), "value 4");
-            }
-
-            keyIt = request.headers().find("content-length");
-            EXPECT_NE(keyIt, request.headers().end());
-            if (keyIt != request.headers().end())
-            {
-                EXPECT_STREQ(keyIt->second.c_str(), "13");
-            }
+            EXPECT_STREQ(request.headers().find("Key 3").c_str(), "value 3");
+            EXPECT_STREQ(request.headers().find("key 4").c_str(), "value 4");
+            EXPECT_STREQ(request.headers().find("content-length").c_str(), "13");
+          
             EXPECT_EQ(request.body().size(), size_t(13));
             EXPECT_STREQ(std::string(request.body().data(), request.body().size()).c_str(), "goodbye world");
 
@@ -152,8 +120,8 @@ TEST(Server, Route)
 
             std::string fooBarData =
                           "GET /foo/bar HTTP/1.1\r\n";
-            fooBarData += "key1: value 1\r\n";
-            fooBarData += "key2: value 2\r\n";
+            fooBarData += "key 1: value 1\r\n";
+            fooBarData += "key 2: value 2\r\n";
             fooBarData += "content-length: 8\r\n\r\n";
             fooBarData += "cool kid";
 
@@ -168,8 +136,8 @@ TEST(Server, Route)
 
             std::string helloWorldData =
                               "POST /hello/world HTTP/1.1\r\n";
-            helloWorldData += "key3: value 3\r\n";
-            helloWorldData += "key4: value 4\r\n";
+            helloWorldData += "key 3: value 3\r\n";
+            helloWorldData += "key 4: value 4\r\n";
             helloWorldData += "content-length: 13\r\n\r\n";
             helloWorldData += "goodbye world";
 

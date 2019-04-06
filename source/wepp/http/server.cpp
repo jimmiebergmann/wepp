@@ -34,7 +34,11 @@ namespace Wepp
     {
 
         Server::Server() :
-            m_state(State::Stopped)
+            m_state(State::Stopped),
+            m_defaultOnError([](Response & response)
+            {
+                response << std::to_string(static_cast<uint32_t>(response.status())) << " - " << getStatusAsString(response.status());
+            })
         { }
 
         Server::~Server()
@@ -85,56 +89,115 @@ namespace Wepp
                     if(!m_receivePool.start(poolMin, poolMax,
                         [this](Priv::HttpReceiver & receiver, std::shared_ptr<Socket::TcpSocket> socket)
                         {
-                            Router::CallbackFunc callbackFunction = nullptr;
+                            Router::CallbackFunc routeFunction = nullptr;
                             Request request;
                             Response response;
 
-                            const auto status = receiver.receive(socket, request, response,
+                            auto status = receiver.receive(socket, request, response,
 
                                 // On request.
-                                [this, &callbackFunction](Request & request, Response & response) mutable -> bool
+                                [this, &routeFunction](Request & request, Response & response) mutable -> bool
                                 {
                                     std::vector<std::string> matches;
-                                    callbackFunction = route.find(request.method(), request.resource(), matches);
-                                    if (callbackFunction == nullptr)
+                                    routeFunction = route.find(request.method(), request.resource(), matches);
+                                    if (routeFunction == nullptr)
                                     {
-                                        response.status(Status::NotFound);
-                                        return false;
+                                        routeFunction = route.find("", request.resource(), matches);
+                                        if (routeFunction == nullptr)
+                                        {
+                                            response.status(Status::NotFound);
+                                            return false;
+                                        }
                                     }
                                     return true;
                                 }
                             );
 
-                            // Execute callback.
-                            if (status == Priv::HttpReceiver::Status::Ok && callbackFunction)
+                            Response * finalResponse = &response;
+
+                            bool errorOccured = false;
+
+                            // Execute route function.
+                            if (status == Priv::HttpReceiver::Status::Ok)
                             {
-                                callbackFunction(request, response);
+                                try
+                                {
+                                    routeFunction(request, response);
+                                }
+                                catch (std::exception &)
+                                {
+                                    response.status(Status::InternalServerError);
+                                    status = Priv::HttpReceiver::Status::InternalError;
+                                    errorOccured = true;
+                                }
+                                
+                            }
+                            // Client disconnected.
+                            else if (status != Priv::HttpReceiver::Status::Disconnected)
+                            {
+                                return;
+                            }
+                            // Server or client error.
+                            else
+                            {
+                                errorOccured = true;
                             }
 
-                            if (status != Priv::HttpReceiver::Status::Disconnected)
+                            // Execute error callback.
+                            if (errorOccured)
                             {
-                                // Send response
-                                auto & body = response.body();
+                                Response onErrorResponse;
+                                onErrorResponse.status(response.status());
+                                OnRequestRouter * errorOnRequest = nullptr;
+                                OnRequestRouter::CallbackFunction * errorFunction = nullptr;
 
-                                std::string responseStart =
-                                    "HTTP/1.1 ";
-                                responseStart += std::to_string(static_cast<unsigned long long>(response.status()));
-                                responseStart += " " + getStatusAsString(response.status());
-                                responseStart += "\r\n";
-                                responseStart +=
-                                    "Server: Wepp\r\n"
-                                    "Content-Length: " + std::to_string(body.size()) + "\r\n"
-                                    "Connection: Closed\r\n\r\n";
-
-                                socket->send(responseStart);
-
-                                const size_t bodySize = body.size();
-                                if (bodySize)
+                                switch (status)
                                 {
-                                    socket->send(body.data(), bodySize);
+                                case Priv::HttpReceiver::Status::PeerError:
+                                    errorOnRequest = &onClientError;
+                                    break;
+                                case Priv::HttpReceiver::Status::InternalError:
+                                    errorOnRequest = &onServerError;
+                                    break;  
+                                default:
+                                    break;
                                 }
 
+                                if (errorOnRequest != nullptr)
+                                {
+                                    if (errorOnRequest->callback)
+                                    {
+                                        errorFunction = &errorOnRequest->callback;
+                                    }
+                                    else if (onAnyError.callback)
+                                    {
+                                        errorFunction = &onAnyError.callback;
+                                    }
+                                }
+
+                                if (errorFunction)
+                                {
+                                    try
+                                    {
+                                        (*errorFunction)(onErrorResponse);
+                                    }
+                                    catch (std::exception &)
+                                    {
+                                        onErrorResponse.clear();
+                                        onErrorResponse.status(Status::InternalServerError);
+                                        m_defaultOnError(onErrorResponse);
+                                    }
+                                }
+                                else
+                                {
+                                    
+                                    m_defaultOnError(onErrorResponse);
+                                }
+
+                                finalResponse = &onErrorResponse;
                             }
+
+                            sendResponse(*socket, *finalResponse);
 
                         }
                     ).wait().successful())
@@ -231,6 +294,47 @@ namespace Wepp
 
             m_state = State::Stopped;
             m_stopTask.finish();
+        }
+
+        void Server::sendResponse(Socket::TcpSocket & socket, Response & response)
+        {
+            auto & headers = response.headers();
+            auto & body = response.body();
+
+            size_t estimatedHeadersSize = 64 * (headers.size() + 1);
+            std::string respHeadData;
+            respHeadData.reserve(estimatedHeadersSize);
+
+            // Generate request line.          
+            respHeadData =
+                "HTTP/1.1 " + std::to_string(static_cast<unsigned long long>(response.status())) +
+                " " + getStatusAsString(response.status()) + "\r\n";
+
+            // Generate header lines.
+            if (!headers.exists("server"))
+            {
+                respHeadData += "server: Wepp\r\n";
+            }
+            if (!headers.exists("connection"))
+            {
+                respHeadData += "connection: Closed\r\n";
+            }
+            headers.set("content-length", body.size());
+            
+            for (auto it = headers.begin(); it != headers.end(); it++)
+            {
+                respHeadData += it->first + ": " + it->second + "\r\n";
+            }
+            respHeadData += "\r\n";
+
+            socket.send(respHeadData);
+
+            // Send body data.
+            const size_t bodySize = body.size();
+            if (bodySize)
+            {
+                socket.send(body.data(), bodySize);
+            }
         }
 
     }

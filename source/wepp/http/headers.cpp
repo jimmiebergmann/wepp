@@ -23,7 +23,7 @@
 *
 */
 
-#include "wepp/http/response.hpp"
+#include "wepp/http/headers.hpp"
 
 namespace Wepp
 {
@@ -31,52 +31,55 @@ namespace Wepp
     namespace Http
     {
 
-        Response::Response() :
-            m_status(Status::Ok)
+        // headers implementations.
+        Headers::Headers()
         { }
 
-        Status Response::status() const
+        size_t Headers::size() const
         {
-            return m_status;
+            return m_headers.size();
         }
 
-        Response & Response::status(const Status status)
+        std::map<std::string, std::string>::const_iterator Headers::begin() const
         {
-            m_status = status;
+            return m_headers.begin();
+        }
+
+        std::map<std::string, std::string>::const_iterator Headers::end() const
+        {
+            return m_headers.end();
+        }
+
+        bool Headers::exists(const std::string & key) const
+        {
+            return m_headers.find(key) != m_headers.end();
+        }
+
+        Headers & Headers::unset(const std::string & key)
+        {
+            m_headers.erase(key);
             return *this;
         }
 
-        Headers & Response::headers()
-        {
-            return m_headers;
+        std::string Headers::find(const std::string & key) const
+        { 
+            std::string lowerKey;
+            lowerKey.resize(key.size(), 0);
+            std::transform(key.begin(), key.end(), lowerKey.begin(), [](int c) -> char {return static_cast<char>(::tolower(c)); });
+
+            auto it = m_headers.find(lowerKey);
+            if (it == m_headers.end())
+            {
+                return "";
+            }
+
+            return it->second;
         }
 
-        const Headers & Response::headers() const
+        Headers & Headers::clear()
         {
-            return m_headers;
-        }
-
-        Body & Response::body()
-        {
-            return m_body;
-        }
-        
-        const Body & Response::body() const
-        {
-            return m_body;
-        }
-
-        Response & Response::operator <<(const std::string & string)
-        {
-            m_body << string;
-            return *this;
-        }
-
-        void Response::clear()
-        {
-            m_status = Status::Ok;
             m_headers.clear();
-            m_body.clear();
+            return *this;
         }
 
     }

@@ -27,6 +27,7 @@
 #define WEPP_HTTP_REQUEST_HPP
 
 #include "wepp/build.hpp"
+#include "wepp/http/headers.hpp"
 #include "wepp/http/body.hpp"
 #include <string>
 #include <map>
@@ -53,12 +54,6 @@ namespace Wepp
         {
 
         public:
-
-            /**
-            * Header map type.
-            *
-            */
-            typedef std::map<std::string, std::string> HeaderMap;
 
             /**
             * Default constructor.
@@ -88,13 +83,13 @@ namespace Wepp
             * Get headers.
             *
             */
-            HeaderMap & headers();
+            Headers & headers();
 
             /**
             * Get const headers.
             *
             */
-            const HeaderMap & headers() const;
+            const Headers & headers() const;
 
             /**
             * Get body.
@@ -133,9 +128,8 @@ namespace Wepp
             std::string m_method;       /**< Request method. */
             std::string m_resource;     /**< Request URI/resource. */
             std::string m_version;      /**< Version of HTTP protocol. */
-
-            HeaderMap m_headers;        /**< Headers map. */
-            Body m_body;                /**< Request body. */
+            Headers m_headers;          /**< Headers of request. */
+            Body m_body;                /**< Body of request. */
 
         };
 

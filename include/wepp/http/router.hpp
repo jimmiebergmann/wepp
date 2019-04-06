@@ -241,6 +241,41 @@ namespace Wepp
 
         };
 
+
+        /**
+        * On http request router class.
+        *
+        *
+        */
+        class WEPP_API OnRequestRouter
+        {
+
+        public:
+
+            typedef std::function<void(Response &)> CallbackFunction; /**< Typedef of callback function. */
+
+            /**
+            * Default constructor.
+            *
+            */
+            OnRequestRouter();
+
+            /**
+            * Constructor, initialized with callback function.
+            *
+            */
+            OnRequestRouter(const CallbackFunction & callback);
+
+            /**
+            * Assigning callback function.
+            *
+            */
+            OnRequestRouter & operator=(const CallbackFunction & callback);
+
+            CallbackFunction callback; /**< Callback function.. */
+
+        };
+
     }
 
 }

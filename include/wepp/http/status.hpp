@@ -50,11 +50,13 @@ namespace Wepp
         */
         enum class Status: uint32_t
         {
+            // Informational.
             Continue                        = 100,
             SwitchingProtocols              = 101,
             Processing                      = 102,
             EarlyHints                      = 103,
 
+            // Success.
             Ok                              = 200,
             Created                         = 201,
             Accepted                        = 202,
@@ -66,6 +68,7 @@ namespace Wepp
             AlreadyReported                 = 208,
             ImUsed                          = 226,
 
+            // Redirection.
             MultipleChoices                 = 300,
             MovedPermanently                = 301,
             Found                           = 302,
@@ -76,6 +79,7 @@ namespace Wepp
             TemporaryRedirect               = 307,
             PermanentRedirect               = 308,
 
+            // Client error.
             BadRequest                      = 400,
             Unauthorized                    = 401,
             PaymentRequired                 = 402,
@@ -105,6 +109,7 @@ namespace Wepp
             RequestHeaderFieldsTooLarge     = 431,
             UnavailableForLegalReasons      = 451,
 
+            // Server error.
             InternalServerError             = 500,
             NotImplemented                  = 501,
             BadGateway                      = 502,
@@ -125,6 +130,46 @@ namespace Wepp
         *
         */
         WEPP_API const std::string & getStatusAsString(const Status status);
+
+        /**
+        * Checks if status is an informational status.
+        *
+        * @return True if passed status is an informational status(1xx status code), else false.
+        *
+        */
+        WEPP_API bool isInformationalStatus(const Status status);
+
+        /**
+        * Checks if status is a success status.
+        *
+        * @return True if passed status is an success status(2xx status code), else false.
+        *
+        */
+        WEPP_API bool isSuccessStatus(const Status status);
+
+        /**
+        * Checks if status is an redirection status.
+        *
+        * @return True if passed status is a redirection status(3xx status code), else false.
+        *
+        */
+        WEPP_API bool isRedirectionStatus(const Status status);
+
+        /**
+        * Checks if status is a client error status.
+        *
+        * @return True if passed status is client error status(4xx status code), else false.
+        *
+        */
+        WEPP_API bool isClientErrorStatus(const Status status);
+
+        /**
+        * Checks if status is a server error status.
+        *
+        * @return True if passed status is server error status(5xx status code), else false.
+        *
+        */
+        WEPP_API bool isServerErrorStatus(const Status status);
 
     }
 

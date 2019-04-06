@@ -178,6 +178,36 @@ namespace Wepp
             return s_EmptyString;
         }
 
+        bool isInformationalStatus(const Status status)
+        {
+            const uint32_t code = static_cast<uint32_t>(status);
+            return code >= 100 && code < 200;
+        }
+
+        bool isSuccessStatus(const Status status)
+        {
+            const uint32_t code = static_cast<uint32_t>(status);
+            return code >= 200 && code < 300;
+        }
+
+        bool isRedirectionStatus(const Status status)
+        {
+            const uint32_t code = static_cast<uint32_t>(status);
+            return code >= 300 && code < 400;
+        }
+
+        bool isClientErrorStatus(const Status status)
+        {
+            const uint32_t code = static_cast<uint32_t>(status);
+            return code >= 400 && code < 500;
+        }
+
+        bool isServerErrorStatus(const Status status)
+        {
+            const uint32_t code = static_cast<uint32_t>(status);
+            return code >= 500 && code < 600;
+        }
+
     }
 
 }

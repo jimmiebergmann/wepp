@@ -282,6 +282,20 @@ namespace Wepp
             return *this;
         }
 
+        // OnRequestRouter implementation.
+        OnRequestRouter::OnRequestRouter()
+        { }
+
+        OnRequestRouter::OnRequestRouter(const CallbackFunction & p_callback) :
+            callback(p_callback)
+        { }
+
+        OnRequestRouter & OnRequestRouter::operator=(const CallbackFunction & p_callback)
+        {
+            callback = p_callback;
+            return *this;
+        }
+
     }
 
 }

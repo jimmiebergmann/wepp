@@ -103,6 +103,34 @@ namespace Wepp
             */
             Router route;
 
+            /**
+            * Callback function triggered if any error occured while receiving client request,
+            * and related on...Error function is not set.
+            *
+            * @remark The callback function is not triggered if the request is routed
+            *         and successfully executed, regardless of status code set by route implementer.
+            *
+            */
+            OnRequestRouter onAnyError;
+
+            /**
+            * Callback function triggered if a client error occuered while receiving client request.
+            *
+            * @remark The callback function is not triggered if the request is routed
+            *         and successfully executed, regardless of status code set by route implementer.
+            *
+            */
+            OnRequestRouter onClientError;
+
+            /**
+            * Callback function triggered if a server error occuered while receiving client request.
+            *
+            * @remark The callback function is not triggered if the request is routed
+            *         and successfully executed, regardless of status code set by route implementer.
+            *
+            */
+            OnRequestRouter onServerError;
+
         private:
 
             /**
@@ -110,6 +138,15 @@ namespace Wepp
             *
             */
             void handleStop();
+
+            /**
+            * Send response to client.
+            *
+            * @param socket     - Tcp socket of client.
+            * @param response   - Response class, containing all the information needed for construction a HTTP response.
+            *
+            */
+            void sendResponse(Socket::TcpSocket & socket, Response & response);
 
             /**
             * Enumerator of different server states.
@@ -130,6 +167,8 @@ namespace Wepp
             TaskController<> m_stopTask;        /**< Task for stopping the server. */    
             Socket::TcpListener m_listener;     /**< Tcp listener. */
             Priv::ReceivePool m_receivePool;    /**< Thred pool of receive pool workers.*/
+
+            OnRequestRouter::CallbackFunction m_defaultOnError; /**< Default response function of errors. */
 
         };
 

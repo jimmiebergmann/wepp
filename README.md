@@ -7,7 +7,7 @@ A web microframework written in C++, providing a clean API for running REST serv
 No useful functionality is yet available.
 
 ## Dependencies
-* C++14
+* C++17
 * googletest (git submodule)
 
 ## Build

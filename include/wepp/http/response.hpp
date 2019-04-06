@@ -28,6 +28,7 @@
 
 #include "wepp/build.hpp"
 #include "wepp/http/status.hpp"
+#include "wepp/http/headers.hpp"
 #include "wepp/http/body.hpp"
 
 /**
@@ -72,16 +73,28 @@ namespace Wepp
             Response & status(const Status status);
 
             /**
+            * Get const body.
+            *
+            */
+            Headers & headers();
+
+            /**
+            * Get const headers.
+            *
+            */
+            const Headers & headers() const;
+
+            /**
             * Get body.
             *
             */
-            const Body & body() const;
+            Body & body();
 
             /**
             * Get const body.
             *
             */
-            Body & body();
+            const Body & body() const;
 
             /**
             * Body appending.
@@ -89,10 +102,17 @@ namespace Wepp
             */
             Response & operator <<(const std::string & string);
 
+            /**
+            * Clear all data from response.
+            *
+            */
+            void clear();
+
         private:
 
-            Status  m_status;   /**< Status of response. */
+            Status  m_status;   /**< Status of response. */          
             Body    m_body;     /**< Body of response. */
+            Headers m_headers;  /**< Headers of response.*/
 
         };
 

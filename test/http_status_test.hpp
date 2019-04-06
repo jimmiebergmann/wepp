@@ -72,3 +72,143 @@ TEST(Http_Status, getStatusAsString)
     EXPECT_STREQ(Http::getStatusAsString(Http::Status::NotExtended).c_str(), "Not Extended");
     EXPECT_STREQ(Http::getStatusAsString(Http::Status::NetworkAuthenticationRequired).c_str(), "Network Authentication Required");
 }
+
+TEST(Http_Status, isStatus)
+{
+    {
+        EXPECT_TRUE(Http::isInformationalStatus(Http::Status::Continue));
+        EXPECT_TRUE(Http::isInformationalStatus(Http::Status::SwitchingProtocols));
+        EXPECT_TRUE(Http::isInformationalStatus(Http::Status::Processing));
+        EXPECT_TRUE(Http::isInformationalStatus(Http::Status::EarlyHints));
+
+        EXPECT_TRUE(Http::isSuccessStatus(Http::Status::Ok));
+        EXPECT_TRUE(Http::isSuccessStatus(Http::Status::Created));
+        EXPECT_TRUE(Http::isSuccessStatus(Http::Status::Accepted));
+        EXPECT_TRUE(Http::isSuccessStatus(Http::Status::NonAuthoritativeInformation));
+        EXPECT_TRUE(Http::isSuccessStatus(Http::Status::NoContent));
+        EXPECT_TRUE(Http::isSuccessStatus(Http::Status::ResetContent));
+        EXPECT_TRUE(Http::isSuccessStatus(Http::Status::PartialContent));
+        EXPECT_TRUE(Http::isSuccessStatus(Http::Status::MultiStatus));
+        EXPECT_TRUE(Http::isSuccessStatus(Http::Status::AlreadyReported));
+        EXPECT_TRUE(Http::isSuccessStatus(Http::Status::ImUsed));
+
+        EXPECT_TRUE(Http::isRedirectionStatus(Http::Status::MultipleChoices));
+        EXPECT_TRUE(Http::isRedirectionStatus(Http::Status::MovedPermanently));
+        EXPECT_TRUE(Http::isRedirectionStatus(Http::Status::Found));
+        EXPECT_TRUE(Http::isRedirectionStatus(Http::Status::SeeOther));
+        EXPECT_TRUE(Http::isRedirectionStatus(Http::Status::NotModified));
+        EXPECT_TRUE(Http::isRedirectionStatus(Http::Status::UseProxy));
+        EXPECT_TRUE(Http::isRedirectionStatus(Http::Status::SwitchProxy));
+        EXPECT_TRUE(Http::isRedirectionStatus(Http::Status::TemporaryRedirect));
+        EXPECT_TRUE(Http::isRedirectionStatus(Http::Status::PermanentRedirect));
+
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::BadRequest));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::Unauthorized));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::PaymentRequired));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::Forbidden));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::NotFound));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::MethodNotAllowed));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::NotAcceptable));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::ProxyAuthenticationRequired));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::RequestTimeout));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::Conflict));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::Gone));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::LengthRequired));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::PreconditionFailed));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::PayloadTooLarge));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::UriTooLong));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::UnsupportedMediaType));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::RangeNotSatisfiable));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::ExpectationFailed));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::ImATeapot));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::MisdirectedRequest));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::UnprocessableEntity));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::Locked));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::FailedDependency));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::UpgradeRequired));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::PreconditionRequired));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::TooManyRequests));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::RequestHeaderFieldsTooLarge));
+        EXPECT_TRUE(Http::isClientErrorStatus(Http::Status::UnavailableForLegalReasons));
+
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::InternalServerError));
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::NotImplemented));
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::BadGateway));
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::ServiceUnavailable));
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::GatewayTimeout));
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::HttpVersionNotSupported));
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::VariantAlsoNegotiates));
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::InsufficientStorage));
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::LoopDetected));
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::NotExtended));
+        EXPECT_TRUE(Http::isServerErrorStatus(Http::Status::NetworkAuthenticationRequired));
+    }
+    {
+        EXPECT_FALSE(Http::isServerErrorStatus(Http::Status::Continue));
+        EXPECT_FALSE(Http::isServerErrorStatus(Http::Status::SwitchingProtocols));
+        EXPECT_FALSE(Http::isServerErrorStatus(Http::Status::Processing));
+        EXPECT_FALSE(Http::isServerErrorStatus(Http::Status::EarlyHints));
+
+        EXPECT_FALSE(Http::isInformationalStatus(Http::Status::Ok));
+        EXPECT_FALSE(Http::isInformationalStatus(Http::Status::Created));
+        EXPECT_FALSE(Http::isInformationalStatus(Http::Status::Accepted));
+        EXPECT_FALSE(Http::isInformationalStatus(Http::Status::NonAuthoritativeInformation));
+        EXPECT_FALSE(Http::isInformationalStatus(Http::Status::NoContent));
+        EXPECT_FALSE(Http::isInformationalStatus(Http::Status::ResetContent));
+        EXPECT_FALSE(Http::isInformationalStatus(Http::Status::PartialContent));
+        EXPECT_FALSE(Http::isInformationalStatus(Http::Status::MultiStatus));
+        EXPECT_FALSE(Http::isInformationalStatus(Http::Status::AlreadyReported));
+        EXPECT_FALSE(Http::isInformationalStatus(Http::Status::ImUsed));
+
+        EXPECT_FALSE(Http::isSuccessStatus(Http::Status::MultipleChoices));
+        EXPECT_FALSE(Http::isSuccessStatus(Http::Status::MovedPermanently));
+        EXPECT_FALSE(Http::isSuccessStatus(Http::Status::Found));
+        EXPECT_FALSE(Http::isSuccessStatus(Http::Status::SeeOther));
+        EXPECT_FALSE(Http::isSuccessStatus(Http::Status::NotModified));
+        EXPECT_FALSE(Http::isSuccessStatus(Http::Status::UseProxy));
+        EXPECT_FALSE(Http::isSuccessStatus(Http::Status::SwitchProxy));
+        EXPECT_FALSE(Http::isSuccessStatus(Http::Status::TemporaryRedirect));
+        EXPECT_FALSE(Http::isSuccessStatus(Http::Status::PermanentRedirect));
+
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::BadRequest));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::Unauthorized));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::PaymentRequired));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::Forbidden));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::NotFound));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::MethodNotAllowed));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::NotAcceptable));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::ProxyAuthenticationRequired));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::RequestTimeout));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::Conflict));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::Gone));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::LengthRequired));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::PreconditionFailed));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::PayloadTooLarge));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::UriTooLong));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::UnsupportedMediaType));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::RangeNotSatisfiable));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::ExpectationFailed));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::ImATeapot));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::MisdirectedRequest));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::UnprocessableEntity));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::Locked));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::FailedDependency));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::UpgradeRequired));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::PreconditionRequired));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::TooManyRequests));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::RequestHeaderFieldsTooLarge));
+        EXPECT_FALSE(Http::isRedirectionStatus(Http::Status::UnavailableForLegalReasons));
+
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::InternalServerError));
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::NotImplemented));
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::BadGateway));
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::ServiceUnavailable));
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::GatewayTimeout));
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::HttpVersionNotSupported));
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::VariantAlsoNegotiates));
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::InsufficientStorage));
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::LoopDetected));
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::NotExtended));
+        EXPECT_FALSE(Http::isClientErrorStatus(Http::Status::NetworkAuthenticationRequired));
+    }
+}

@@ -8,6 +8,27 @@ using namespace Wepp;
 int main()
 {
     Http::Server server;
+
+
+    // On server error response.
+    server.onClientError = [](Http::Response & response)
+    {
+        response << "Client error - " << Http::getStatusAsString(response.status()) << " (" << std::to_string(static_cast<uint32_t>(response.status())) << ").";
+    };
+
+    // On server error response.
+    server.onServerError = [](Http::Response & response)
+    {
+        response << "Server error - " << Http::getStatusAsString(response.status()) << " (" << std::to_string(static_cast<uint32_t>(response.status())) << ").";
+    };
+
+    // On any error, if on server/client error callback is missing.
+    server.onAnyError = [](Http::Response & response)
+    {
+        response << Http::getStatusAsString(response.status()) << " (" << std::to_string(static_cast<uint32_t>(response.status())) << ").";
+    };
+
+
     std::mutex mutex;
     std::map<std::string, std::string> pets;
 
@@ -27,9 +48,10 @@ int main()
     {
         auto & headers = request.headers();
 
-        auto nameIt = headers.find("name");
-        auto typeIt = headers.find("type");
-        if (nameIt == headers.end() || typeIt == headers.end())
+        auto name = headers.find("name");
+        auto type = headers.find("type");
+
+        if (!name.size() || !type.size())
         {
             response << "Missing headers.\r\n";
             response.status(Http::Status::BadRequest);
@@ -38,22 +60,24 @@ int main()
 
         std::lock_guard<std::mutex> lock(mutex);
 
-        auto petIt = pets.find(nameIt->second);
-        if (petIt != pets.end())
+        auto pet = pets.find(name);
+        if (pet != pets.end())
         {
-            petIt->second = typeIt->second;
-            response << "Updated pet: " << nameIt->second << ": " << typeIt->second << "\r\n";
+            pet->second = type;
+            response << "Updated pet: " << name << ": " << type << "\r\n";
         }
         else
         {
-            pets.insert({ nameIt->second, typeIt->second });
-            response << "Added new pet: " << nameIt->second << ": " << typeIt->second << "\r\n";
+            pets.insert({ name, type });
+            response << "Added new pet: " << name << ": " << type << "\r\n";
         }
         
     };
 
+
+
     // POST /stop - Remotely stopping server.
-    server.route["GET"]["/stop"] = [&mutex, &server](const Http::Request &, Http::Response & response)
+    server.route[""]["/stop"] = [&mutex, &server](const Http::Request &, Http::Response & response)
     {
         std::lock_guard<std::mutex> lock(mutex);
 
