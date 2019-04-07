@@ -119,6 +119,33 @@ namespace Wepp
             return false;
         }
 
+        bool Socket::setReuseAddress(const bool status) const
+        {
+            if (m_handle)
+            {
+               /* #if defined(WEPP_PLATFORM_WINDOWS)
+
+
+
+                #elif defined(WEPP_PLATFORM_LINUX)
+                */
+                    char enable = status ? 1 : 0;
+                    if (setsockopt(m_handle, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(char)) < 0)
+                    {
+                        return false;
+                    }
+                    return true;
+
+                //#endif
+
+            }
+
+            return false;
+
+
+           
+        }
+
 
         Socket & Socket::operator = (const Handle & handle)
         {

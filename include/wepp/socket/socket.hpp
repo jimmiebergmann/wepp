@@ -105,6 +105,12 @@ namespace Wepp
             bool setBlocking(const bool status) const;
 
             /**
+            * Activate or deactivate socket reuse address.
+            *
+            */
+            bool setReuseAddress(const bool status) const;
+
+            /**
             * Set the native handle.
             *
             */

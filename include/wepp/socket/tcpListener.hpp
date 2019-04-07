@@ -53,7 +53,7 @@ namespace Wepp
         * Tcp listener class.
         *
         */
-        class WEPP_API TcpListener : Socket
+        class WEPP_API TcpListener : private Socket
         {
 
         public:
