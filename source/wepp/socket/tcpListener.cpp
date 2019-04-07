@@ -97,13 +97,15 @@ namespace Wepp
                     }
 
                     // Make it possible to reuse the address.
-                    // We need to do this if a bound socket to the same address lately has been closed, but not completelt freed yet.
-                    if (!setReuseAddress(true))
-                    {
-                        //std::cerr << "Listen function failed with error: " << Socket::getLastError() << std::endl;
-                        failedStarting = true;
-                        break;
-                    }
+                    // We need to do this on *inx systems, if a bound socket to the same address lately has been closed, but not completelt freed yet.
+                    #if defined(WEPP_PLATFORM_LINUX)
+                        if (!setReuseAddress(true))
+                        {
+                            //std::cerr << "Listen function failed with error: " << Socket::getLastError() << std::endl;
+                            failedStarting = true;
+                            break;
+                        }
+                    #endif
 
                     // Bind listen socket.
                     sockaddr_in service;
