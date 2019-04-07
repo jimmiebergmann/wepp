@@ -123,27 +123,29 @@ namespace Wepp
         {
             if (m_handle)
             {
-               /* #if defined(WEPP_PLATFORM_WINDOWS)
+                #if defined(WEPP_PLATFORM_WINDOWS)
 
-
-
-                #elif defined(WEPP_PLATFORM_LINUX)
-                */
                     char enable = status ? 1 : 0;
-                    if (setsockopt(m_handle, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(char)) < 0)
+                    if (setsockopt(m_handle, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(char)) != 0)
                     {
                         return false;
                     }
                     return true;
 
-                //#endif
+                #elif defined(WEPP_PLATFORM_LINUX)
+
+                    int enable = status ? 1 : 0;
+                    if (setsockopt(m_handle, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+                    {
+                        return false;
+                    }
+                    return true;
+
+                #endif
 
             }
 
             return false;
-
-
-           
         }
 
 
