@@ -28,8 +28,9 @@
 
 #include "wepp/build.hpp"
 #include "wepp/socket/socket.hpp"
-#include "wepp/task.hpp"
 #include <string>
+#include <chrono>
+#include <limits>
 
 /**
 * Wepp namespace.
@@ -61,7 +62,8 @@ namespace Wepp
             TcpSocket();
 
             /**
-            * Constructor.
+            * Constructing TCP socket by passing handle.
+            * The responsibility of closing the handle is transferred to the socket class.
             *
             */
             TcpSocket(const Handle handle);
@@ -73,29 +75,41 @@ namespace Wepp
             ~TcpSocket();
 
             /**
-            * Set the native handle.
+            * Creates socket and connects to host.
             *
             */
-            TcpSocket & operator = (const Handle & handle);
+            Status connect(const std::string & endpoint, const uint16_t port,
+                         const std::chrono::duration<double> & timeout = std::chrono::duration<double>::max());
 
             /**
-            * Connect to host.
+            * Creates socket, binds to address and listen for incoming connections.
             *
             */
-            bool connect(const std::string & endpoint, const uint16_t port);
+            Status listen(const uint16_t port, const std::string & endpoint, const uint32_t backlog = std::numeric_limits<uint32_t>::max());
+
+            /**
+            * Listen for incoming connections.
+            *
+            * @param peerSocket[out] - Accepted peer socket. 
+            *
+            * @return Status of peer acception. Status::Successful if accepted, Status::Timeout if timeout is reached, or Status::Error if any error occured.
+            *         Check getLastError if Status::Error is returned.
+            *
+            */
+            Status accept(TcpSocket & peerSocket, const std::chrono::duration<double> & timeout = std::chrono::duration<double>::max());
 
             /**
             * Receive data.
             *
             */
-            int receive(char * buffer, const int length);
+            Socket::Status receive(char * buffer, const int length, int & received, const std::chrono::duration<double> & timeout = std::chrono::duration<double>::max());
 
             /**
             * Send data
             *
             */
-            int send(const char * data, const int length);
-            int send(const std::string & data);
+            int send(const char * data, const int length/*, const std::chrono::duration<double> & timeout = std::chrono::duration<double>::max()*/);
+            int send(const std::string & data/*, const std::chrono::duration<double> & timeout = std::chrono::duration<double>::max()*/);
 
         };
 

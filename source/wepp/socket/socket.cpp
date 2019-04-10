@@ -34,6 +34,7 @@ namespace Wepp
     namespace Socket
     {
 
+        // Socket implementations.
         int Socket::getLastError()
         {
         #if defined(WEPP_PLATFORM_WINDOWS)
@@ -61,21 +62,39 @@ namespace Wepp
         { }
 
         Socket::~Socket()
+        { }
+
+        void Socket::close()
         {
             if (m_handle)
             {
                 WeppCloseSocket(m_handle);
+                m_handle = 0;
             }
         }
 
-        const Socket::Handle & Socket::handle() const
+        Socket::Handle Socket::getHandle() const
         {
             return m_handle;
         }
 
+        void Socket::setHandle(const Handle handle)
+        {
+            if (handle != m_handle)
+            {
+                close();
+                m_handle = handle;
+            }
+        }
+
+        void Socket::releaseHandle()
+        {
+            m_handle = 0;
+        }
+
         bool Socket::setBlocking(const bool status) const
         {
-            if( m_handle )
+            if(m_handle)
             {
                 #if defined(WEPP_PLATFORM_WINDOWS)
 
@@ -91,8 +110,8 @@ namespace Wepp
 
                 #elif defined(WEPP_PLATFORM_LINUX)
 
-                    // Get the current  file descriptor.
-                    int opts = fcntl( m_handle, F_GETFL );
+                    // Get the current file descriptor.
+                    int opts = fcntl(m_handle, F_GETFL );
                     if (opts < 0)
                     {
                         //std::cerr << "Getting file descriptor failed with error: " << Socket::getLastError() << std::endl;
@@ -104,7 +123,7 @@ namespace Wepp
 
                     // Try to set the new file descriptor.
                     int result = 0;
-                    if( ( result = fcntl( m_handle, F_SETFL, opts ) ) < 0 )
+                    if( ( result = fcntl(m_handle, F_SETFL, opts ) ) < 0 )
                     {
                         //std::cerr << "Setting blocking failed with error: " << Socket::getLastError() << std::endl;
                         return false;
@@ -149,17 +168,8 @@ namespace Wepp
         }
 
 
-        Socket & Socket::operator = (const Handle & handle)
-        {
-            m_handle = handle;
-            return *this;
-        }
-
-
-
-
         // Intiialize winsock.
-        #if defined(WEPP_PLATFORM_WINDOWS)
+    #if defined(WEPP_PLATFORM_WINDOWS)
         struct WinsockInitializer
         {
             WinsockInitializer()
@@ -179,7 +189,8 @@ namespace Wepp
 
         // Create an instance of the intiialize
         static WinsockInitializer g_WinsockInitializer;
-        #endif
+    #endif
+
     }
 
 }

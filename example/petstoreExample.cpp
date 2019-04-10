@@ -9,28 +9,14 @@ int main()
 {
     Http::Server server;
 
+    std::mutex mutex;
+    std::map<std::string, std::string> pets;
 
-    // On server error response.
-    server.onClientError = [](Http::Response & response)
-    {
-        response << "Client error - " << Http::getStatusAsString(response.status()) << " (" << std::to_string(static_cast<uint32_t>(response.status())) << ").";
-    };
-
-    // On server error response.
-    server.onServerError = [](Http::Response & response)
-    {
-        response << "Server error - " << Http::getStatusAsString(response.status()) << " (" << std::to_string(static_cast<uint32_t>(response.status())) << ").";
-    };
-
-    // On any error, if on server/client error callback is missing.
+    // On any error.
     server.onAnyError = [](Http::Response & response)
     {
         response << Http::getStatusAsString(response.status()) << " (" << std::to_string(static_cast<uint32_t>(response.status())) << ").";
     };
-
-
-    std::mutex mutex;
-    std::map<std::string, std::string> pets;
 
     // GET /pets - Gets list of all available pets.
     server.route["GET"]["/pets"] = [&mutex, &pets](const Http::Request &, Http::Response & response)
@@ -73,7 +59,6 @@ int main()
         }
         
     };
-
 
 
     // POST /stop - Remotely stopping server.

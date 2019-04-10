@@ -80,16 +80,17 @@ namespace Wepp
                 return -2;
             }
 
-            int result = socket.receive(m_currentReceivePointer, m_bufferSize - m_receivedPosition);
+            int received = 0;
+            /*auto status = */socket.receive(m_currentReceivePointer, m_bufferSize - m_receivedPosition, received);
 
-            if (result)
+            if (received)
             {
-                const size_t recvSize = static_cast<size_t>(result);
+                const size_t recvSize = static_cast<size_t>(received);
                 m_currentReceivePointer += recvSize;
                 m_receivedPosition += recvSize;
             }
 
-            return result >= 0 ? result : -1;
+            return received >= 0 ? received : -1;
         }
 
         bool HttpReceiverBuffer::receive(const std::string & string)

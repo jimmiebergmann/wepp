@@ -134,9 +134,10 @@ TEST(Server, Route)
             fooBarData += "cool kid";
 
             EXPECT_EQ(peer.send(fooBarData), int(fooBarData.size()));
-            int recvStatus = peer.receive(recvBuffer, recvBufferSize);
-            EXPECT_GT(recvStatus, 0);
-            recvBuffer[recvStatus + 1] = 0;
+            int recvSize = 0;
+            /*auto recvStatus = */peer.receive(recvBuffer, recvBufferSize, recvSize);
+            EXPECT_GT(recvSize, 0);
+            recvBuffer[recvSize + 1] = 0;
         }
         {
             Socket::TcpSocket peer;
@@ -150,9 +151,10 @@ TEST(Server, Route)
             helloWorldData += "goodbye world";
 
             EXPECT_EQ(peer.send(helloWorldData), int(helloWorldData.size()));
-            int recvStatus = peer.receive(recvBuffer, recvBufferSize);
-            EXPECT_GT(recvStatus, 0);
-            recvBuffer[recvStatus + 1] = 0;
+            int recvSize = 0;
+            /*auto recvStatus = */peer.receive(recvBuffer, recvBufferSize, recvSize);
+            EXPECT_GT(recvSize, 0);
+            recvBuffer[recvSize + 1] = 0;
         }
 
         sem1.wait();

@@ -205,9 +205,9 @@ namespace Wepp
             template<typename ... Args>
             Members(Args ... args);
 
-            std::atomic<TaskStatus> m_status;                        /**< Status of task. */
+            std::atomic<TaskStatus> m_status;       /**< Status of task. */
             Return m_value;                         /**< Return value of task. */
-            std::atomic_bool m_timeout;                         /**< Flag indicating if wait() timed out.*/
+            std::atomic_bool m_timeout;             /**< Flag indicating if wait() timed out.*/
             std::mutex m_mutex;
             std::condition_variable m_condition;
         };

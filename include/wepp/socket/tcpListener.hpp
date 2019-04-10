@@ -53,7 +53,7 @@ namespace Wepp
         * Tcp listener class.
         *
         */
-        class WEPP_API TcpListener : private Socket
+        class WEPP_API TcpListener
         {
 
         public:
@@ -102,7 +102,8 @@ namespace Wepp
             /**
             * Listen for incoming connections.
             *
-            * @return Task containg a tcp socket. Call wait() on the task to wait for incoming connection.
+            * @return Task containg a tcp socket of connected peer.
+            *         Call wait() on the task to wait for incoming connection.
             *
             */
             Task<std::shared_ptr<TcpSocket>> listen();
@@ -135,6 +136,7 @@ namespace Wepp
             TaskController<>                    m_startTask;    /**< Task for starting the listener. */
             TaskController<>                    m_stopTask;     /**< Task for stopping the listener. */
             Semaphore                           m_sempahore;    /**< Sempahore, triggering thread to listen.*/
+            TcpSocket                           m_listenSocket; /**< Tcp socket for listening on incoming connections.*/
             std::queue<ListenTaskController>    m_listenQueue;  /**< Queue of listen tasks.*/
 
         };

@@ -114,6 +114,7 @@ TEST(TcpListener, Listen)
         EXPECT_TRUE(listenTask.wait(std::chrono::seconds(3)).successful());
         auto server = listenTask();
 
+        int recvSize = 0;
         const int bufferSize1 = 13;
         const int bufferSize2 = 8;
         char serverSendBuffer[bufferSize1] = "Hello world!";
@@ -122,11 +123,13 @@ TEST(TcpListener, Listen)
         char serverRecvBuffer[bufferSize1] = "\0\0\0\0\0\0\0\0\0\0\0\0";
 
         EXPECT_EQ(server->send(serverSendBuffer, bufferSize1), bufferSize1);
-        EXPECT_EQ(client.receive(clientRecvBuffer, bufferSize1), bufferSize1);
+        EXPECT_EQ(client.receive(clientRecvBuffer, bufferSize1, recvSize), Socket::Socket::Status::Successful);
+        EXPECT_EQ(recvSize, bufferSize1);
         EXPECT_STREQ(clientRecvBuffer, "Hello world!");
 
         EXPECT_EQ(client.send(clientSendBuffer, bufferSize2), bufferSize2);
-        EXPECT_EQ(server->receive(serverRecvBuffer, bufferSize1), bufferSize2);
+        EXPECT_EQ(server->receive(serverRecvBuffer, bufferSize1, recvSize), Socket::Socket::Status::Successful);
+        EXPECT_EQ(recvSize, bufferSize2);
         serverRecvBuffer[bufferSize2] = '\0';
         EXPECT_STREQ(serverRecvBuffer, "foo bar");
     }

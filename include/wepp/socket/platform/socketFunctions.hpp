@@ -32,12 +32,12 @@
     #define WEPP_SOCKADDR_TYPE SOCKADDR
     #define WeppIsSocketValid(socket) (socket != INVALID_SOCKET)
     #define WeppIsSocketInvalid(socket) (socket == INVALID_SOCKET)
-    #define WeppCloseSocket(socket) closesocket(socket)
+    #define WeppCloseSocket(socket) closesocket(m_handle)
 #elif defined(WEPP_PLATFORM_LINUX)
     #define WEPP_SOCKADDR_TYPE sockaddr
     #define WeppIsSocketValid(socket) (socket >= 0)
     #define WeppIsSocketInvalid(socket) (socket < 0)
-    #define WeppCloseSocket(socket) shutdown(socket, SHUT_RDWR);close(socket)
+    #define WeppCloseSocket(socket) shutdown(m_handle, SHUT_RDWR); close(m_handle)
 #endif
 
 #endif

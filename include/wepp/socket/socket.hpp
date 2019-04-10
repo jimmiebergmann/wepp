@@ -53,6 +53,27 @@ namespace Wepp
         public:
 
             /**
+            * Enumerator of different socket statuses.
+            *
+            */
+            enum Status
+            {
+                Error,          /**< Error occured during operation.*/
+                Timeout,        /**< Operation timed out.*/
+                Successful,     /**< Operation succeeded.*/
+            };
+
+            /**
+            * Handle type.
+            *
+            */
+        #if defined(WEPP_PLATFORM_WINDOWS)
+            typedef SOCKET Handle;
+        #elif defined(WEPP_PLATFORM_LINUX)
+            typedef int Handle;
+        #endif
+
+            /**
             * Get latest native error.
             *
             */
@@ -65,23 +86,14 @@ namespace Wepp
             static void setLastError(const int error);
 
             /**
-            * Handle type.
-            *
-            */
-            #if defined(WEPP_PLATFORM_WINDOWS)
-                typedef SOCKET Handle;
-            #elif defined(WEPP_PLATFORM_LINUX)
-                typedef int Handle;
-            #endif
-
-            /**
             * Constructor.
             *
             */
             Socket();
 
             /**
-            * Constructor.
+            * Constructing socket by passing handle.
+            * The responsibility of closing the handle is transferred to the socket class.
             *
             */
             Socket(const Handle handle);
@@ -93,10 +105,30 @@ namespace Wepp
             virtual ~Socket();
 
             /**
-            * Get the native handle.
+            * Close socket.
+            * Ongoing connection is being terminated and any listening event is terminated.
             *
             */
-            const Handle & handle() const;
+            void close();
+
+            /**
+            * Get handle.
+            *
+            */
+            Handle getHandle() const;
+
+            /**
+            * Set handle. Previous handle is being closed.
+            *
+            */
+            void setHandle(const Handle handle);
+
+            /**
+            * Release the handle without closing it.
+            * Responsibility of closing the handle is placed on the caller.
+            *
+            */
+            void releaseHandle();
 
             /**
             * Activate or deactivate socket blocking.
@@ -109,12 +141,6 @@ namespace Wepp
             *
             */
             bool setReuseAddress(const bool status) const;
-
-            /**
-            * Set the native handle.
-            *
-            */
-            Socket & operator = (const Handle & handle);
 
         protected:
 
